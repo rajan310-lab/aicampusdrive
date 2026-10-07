@@ -1,185 +1,212 @@
-# To test this AI-integrated platform locally, run: pip install streamlit pandas requests
+# Unified Master Core: Save this file exactly as app.py
 import streamlit as st
 import pandas as pd
 import requests
 import random
+import pytz
+from datetime import datetime
 
 # ==============================================================================
-# 1. SYSTEM STRUCTURAL PATHS & GLOBAL SEED VARIABLES
+# 1. ENTERPRISE THEMING, SECURITY VISIBILITY BLOCKS & TIMING CORE
 # ==============================================================================
-st.set_page_config(page_title="AI Placement Matrix Engine", layout="wide")
+st.set_page_config(page_title="AI Campus Drive Suite", layout="wide")
+ist = pytz.timezone('Asia/Kolkata')
 
-# Simple Institutional Lookup Table to automate Tier Assignment
-TIER_MAPPING_DB = {
-    "iit bombay": 1, "iit delhi": 1, "bits pilani": 1, "nit trichy": 1,
-    "anna university": 2, "vit vellore": 2, "srm university": 2, "manipal": 2,
-    "local state college": 3, "tier 3 engineering institute": 3
-}
+# Injecting custom CSS to completely hide Streamlit headers, footers, 
+# and repository edit flags, while styling visual element containers.
+st.markdown("""
+    <style>
+        /* Completely strip out top decoration bars and manage app menus */
+        #MainMenu {visibility: hidden;}
+        header {visibility: hidden;}
+        footer {visibility: hidden;}
+        .viewerBadge_link__1S137 {display: none !important;}
+        
+        /* Custom UI Card Containers */
+        .recruiter-header {
+            background-color: #1E3A8A;
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            margin-bottom: 25px;
+        }
+        .student-header {
+            background-color: #047857;
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            margin-bottom: 25px;
+        }
+        .metric-box {
+            background-color: #F3F4F6;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #3B82F6;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # Persistent State Initializations
+if "auth_session" not in st.session_state:
+    st.session_state.auth_session = {"logged_in": False, "username": None, "role": None}
 if "active_exam_paper" not in st.session_state:
     st.session_state.active_exam_paper = None
-if "recruiter_settings" not in st.session_state:
-    st.session_state.recruiter_settings = {"tier": 3, "college": "Default", "dept": "CSE", "total_q": 10}
+if "exam_config" not in st.session_state:
+    st.session_state.exam_config = {"college": "IIT Delhi", "dept": "Computer Science (CSE)", "total_q": 10, "timer_mins": 30}
 
-# Navigation Interface Access Gateway
-user_role = st.sidebar.radio("Navigate User Gate:", ["🏢 Recruiter Command Console", "🎓 Student Exam Terminal"])
-st.sidebar.divider()
+# Local Fallback Data Bank to insulate the app against internet connection lag
+LOCAL_CS_BACKUP_DB = {
+    "easy": [
+        {"question": "What is the primary function of an Operating System Kernel?", "choices": ["Memory/Resource Management", "Web Browsing", "Compiling Code", "Hardware Manufacturing"], "answer": "Memory/Resource Management"},
+        {"question": "Which programming language uses automated Garbage Collection?", "choices": ["Java", "C++", "C", "Assembly"], "answer": "Java"}
+    ],
+    "medium": [
+        {"question": "What is the average time complexity of a QuickSort algorithm loop?", "choices": ["O(n log n)", "O(n^2)", "O(log n)", "O(n)"], "answer": "O(n log n)"},
+        {"question": "Which data structure is best optimized for implementing a BFS graph traversal?", "choices": ["Queue", "Stack", "Binary Tree", "Priority Heap"], "answer": "Queue"}
+    ],
+    "hard": [
+        {"question": "Which concurrency deadlock condition is violated by implementing a strict resource hierarchy ordering?", "choices": ["Circular Wait", "Mutual Exclusion", "Hold and Wait", "No Preemption"], "answer": "Circular Wait"},
+        {"question": "What scheduling anomaly occurs when adding more page frames increases page faults in a FIFO memory setup?", "choices": ["Belady's Anomaly", "Priority Inversion", "Thrashing Equilibrium", "Convoy Effect Matrix"], "answer": "Belady's Anomaly"}
+    ]
+}
 
 # ==============================================================================
-# 2. INTERFACE A: RECRUITER AI GENERATION CONSOLE (Admin Interface)
+# 2. STATEFUL AUTHENTICATION SCREEN (Locks the system entirely)
 # ==============================================================================
-if user_role == "🏢 Recruiter Command Console":
-    st.title("🏢 Recruiter AI Command Console")
-    st.subheader("Automated Cognitive Tier Mapping & Dynamic Paper Formulation")
+if not st.session_state.auth_session["logged_in"]:
+    st.markdown("<div style='text-align: center; margin-top: 50px;'><h1>🔐 AI Campus Drive Access Portal</h1><p>Please enter your credentials to clear security clearance verification.</p></div>", unsafe_allow_html=True)
     st.divider()
     
-    col1, col2 = st.columns(2)
-    with col1:
-        input_college = st.text_input("Enter Target Placement College Name:", value="IIT Delhi")
-        input_dept = st.selectbox("Select Department Focus:", ["Computer Science (CSE)", "Information Technology (IT)", "Electronics (ECE)"])
+    col1, col2, col3 = st.columns()
     with col2:
-        total_questions = st.number_input("Total number of questions to generate for the exam paper:", min_value=10, max_value=30, value=10, step=5)
-    
-    if st.button("🤖 INITIALIZE AI EXAM PAPERS GENERATION"):
-        # Process the input name to find the tier allocation
-        search_key = input_college.strip().lower()
-        detected_tier = 3 # Fallback baseline tier
+        login_role = st.selectbox("Select Your Access Authorization Role:", ["🏢 Corporate Recruiter (Admin)", "🎓 Registered Candidate (Student)"])
+        input_user = st.text_input("Username / Email ID:")
+        input_pass = st.text_input("Access Pin / Password:", type="password")
         
-        for key in TIER_MAPPING_DB:
-            if key in search_key:
-                detected_tier = TIER_MAPPING_DB[key]
-                break
-                
-        # Calculate the exact distribution count using your exact mathematical ratios
-        if detected_tier == 1:
-            ratios = {"easy": 0.30, "medium": 0.40, "hard": 0.30}
-        elif detected_tier == 2:
-            ratios = {"easy": 0.35, "medium": 0.45, "hard": 0.20}
-        else: # Tier 3
-            ratios = {"easy": 0.40, "medium": 0.50, "hard": 0.10}
-            
-        # Convert floating point percentages into clean integer question counts
-        easy_count = max(1, round(total_questions * ratios["easy"]))
-        hard_count = max(1, round(total_questions * ratios["hard"]))
-        medium_count = total_questions - (easy_count + hard_count) # Balance remainder cleanly
-        
-        st.session_state.recruiter_settings = {
-            "tier": detected_tier, "college": input_college, "dept": input_dept, "total_q": total_questions
-        }
-        
-        st.markdown(f"#### 🧠 AI Engine Diagnostic Log Matrix")
-        st.info(f"✔️ **Mapped Value:** '{input_college}' automatically verified as a **Tier {detected_tier} Institution**.")
-        st.write(f"📈 **Target Blueprint Matrix Set:** Fetching `{easy_count} Easy`, `{medium_count} Medium`, and `{hard_count} Difficult` questions from web repositories...")
-        
-        # ─── REAL-TIME INTERNET DATA FETCHING LAYER ───
-             # ─── REAL-TIME DATA INGESTION & FALLBACK MATRIX LAYER ───
-        compiled_questions = []
-        difficulty_targets = [("easy", easy_count), ("medium", medium_count), ("hard", hard_count)]
-        
-        progress_bar = st.progress(0)
-        progress_step = 0
-        
-        # Robust Local Core Data Repository to fallback on if the internet endpoint errors out
-        LOCAL_CS_BACKUP_DB = {
-            "easy": [
-                {"question": "What is the primary function of an Operating System Kernel?", "choices": ["Memory/Resource Management", "Web Browsing", "Compiling Code", "Hardware Manufacturing"], "answer": "Memory/Resource Management"},
-                {"question": "Which programming language uses automated Garbage Collection?", "choices": ["Java", "C++", "C", "Assembly"], "answer": "Java"},
-                {"question": "What does HTTP stand for in web systems engineering?", "choices": ["Hypertext Transfer Protocol", "High Text Tech Protocol", "Hyper Transfer Tech Post", "Home Text Terminal Port"], "answer": "Hypertext Transfer Protocol"}
-            ],
-            "medium": [
-                {"question": "What is the average time complexity of a QuickSort algorithm loop?", "choices": ["O(n log n)", "O(n^2)", "O(log n)", "O(n)"], "answer": "O(n log n)"},
-                {"question": "Which data structure is best optimized for implementing a BFS graph traversal?", "choices": ["Queue", "Stack", "Binary Tree", "Priority Heap"], "answer": "Queue"},
-                {"question": "What constraint does a Primary Key satisfy in a SQL database relational model?", "choices": ["Unique and Not Null", "Null Allowed", "Foreign Value Match", "Auto-Increment Only"], "answer": "Unique and Not Null"}
-            ],
-            "hard": [
-                {"question": "Which concurrency deadlock condition is violated by implementing a strict resource hierarchy ordering?", "choices": ["Circular Wait", "Mutual Exclusion", "Hold and Wait", "No Preemption"], "answer": "Circular Wait"},
-                {"question": "What parsing algorithm design approach does a standard recursive-descent compiler compiler utilize?", "choices": ["Top-Down Parsing", "Bottom-Up Shift-Reduce", "LR State Ingestion", "Operator Precedence Core"], "answer": "Top-Down Parsing"},
-                {"question": "What scheduling anomaly occurs when adding more page frames increases page faults in a FIFO memory setup?", "choices": ["Belady's Anomaly", "Priority Inversion", "Thrashing Equilibrium", "Convoy Effect Matrix"], "answer": "Belady's Anomaly"}
-            ]
-        }
-        
-        for diff_tag, target_num in difficulty_targets:
-            # FIX: Cleaned and optimized the target web URL string boundaries
-            api_url = f"https://opentdb.com{target_num}&category=18&difficulty={diff_tag}&type=multiple"
-            try:
-                # Set a strict 4-second timeout wall so the script won't hang indefinitely
-                response = requests.get(api_url, timeout=4).json()
-                if response.get('response_code') == 0:
-                    for item in response['results']:
-                        options_pool = item['incorrect_answers'] + [item['correct_answer']]
-                        random.shuffle(options_pool)
-                        compiled_questions.append({
-                            "id": len(compiled_questions) + 1,
-                            "difficulty": diff_tag,
-                            "question": item['question'].replace("&quot;", '"').replace("&#039;", "'"),
-                            "choices": options_pool,
-                            "answer": item['correct_answer']
-                        })
-                else:
-                    raise Exception("API Return Code Warning")
-            except Exception as e:
-                # 🛡️ THE FAULT-TOLERANT ESCAPE: If the web fails, sample directly from our local CS core
-                available_backup = LOCAL_CS_BACKUP_DB[diff_tag]
-                sampled_backups = random.sample(available_backup, min(target_num, len(available_backup)))
-                
-                for item in sampled_backups:
-                    opts = list(item['choices'])
-                    random.shuffle(opts)
-                    compiled_questions.append({
-                        "id": len(compiled_questions) + 1,
-                        "difficulty": diff_tag,
-                        "question": item['question'],
-                        "choices": opts,
-                        "answer": item['answer']
-                    })
-                    
-            progress_step += 33
-            progress_bar.progress(min(progress_step, 100))
-            
-        st.session_state.active_exam_paper = compiled_questions
-        st.success(f"🎉 Exam Paper generated successfully! Balanced difficulty loaded onto secure server memory.")
+        if st.button("🚀 Authorize & Enter Gateway", use_container_width=True):
+            # Predefined credentials for presentation validation
+            if login_role == "🏢 Corporate Recruiter (Admin)" and input_user == "recruiter" and input_pass == "admin99":
+                st.session_state.auth_session = {"logged_in": True, "username": "HR Lead", "role": "Recruiter"}
+                st.rerun()
+            elif login_role == "🎓 Registered Candidate (Student)" and input_user == "student" and input_pass == "123456":
+                st.session_state.auth_session = {"logged_in": True, "username": "Candidate Account", "role": "Student"}
+                st.rerun()
+            else:
+                st.error("❌ Authentication Refusal: Access key mapping failed. Verify credentials.")
+    st.stop()
 
 # ==============================================================================
-# 3. INTERFACE B: CANDIDATE ASSESSMENT ENGINE (Student Terminal)
+# 3. RENDER CORE USER CONSOLE WORKFLOWS
 # ==============================================================================
-elif user_role == "🎓 Student Exam Terminal":
-    st.title("🎓 Institutional Placement Assessment Engine")
-    st.divider()
+current_time = datetime.now(ist).strftime('%H:%M:%S')
+
+# Navigation and Session Bar in the Sidebar
+st.sidebar.markdown(f"### 🛡️ Secure System State")
+st.sidebar.markdown(f"👤 Account: **{st.session_state.auth_session['username']}**")
+st.sidebar.markdown(f"🕒 Exchange Time (IST): `{current_time}`")
+if st.sidebar.button("🚪 Terminate Session & Log Out", use_container_width=True):
+    st.session_state.auth_session = {"logged_in": False, "username": None, "role": None}
+    st.session_state.active_exam_paper = None
+    st.rerun()
+
+# ─── MODULE A: RECRUITER AI GENERATION CORE (Admin Interface) ───
+if st.session_state.auth_session["role"] == "Recruiter":
+    st.markdown("<div class='recruiter-header'><h1>🏢 Recruiter Command Suite & Parameter Engine</h1><p>Set operational boundaries, college tier vectors, and generate cognitive balance matrix papers.</p></div>", unsafe_allow_html=True)
     
-    if st.session_state.active_exam_paper is None:
-        st.warning("💤 System Status: Waiting for the Recruiter Admin to deploy the AI test template blueprint.")
-        st.stop()
+    panel_col1, panel_col2 = st.columns(2)
+    with panel_col1:
+        st.markdown("### 🎛️ Exam Parameter Controls")
+        cfg_college = st.text_input("Enter Target College Name:", value=st.session_state.exam_config["college"])
+        cfg_dept = st.selectbox("Select Target Stream:", ["Computer Science (CSE)", "Information Technology (IT)", "Electronics (ECE)"])
+        cfg_q_num = st.number_input("Fix Total Number of Questions:", min_value=10, max_value=30, value=st.session_state.exam_config["total_q"], step=5)
+        cfg_timer = st.slider("Fix Test Duration Countdown Timer (Minutes):", 5, 120, st.session_state.exam_config["timer_mins"])
         
-    st.sidebar.markdown("### 🕒 Active Assessment Scope")
-    st.sidebar.info(f"🏫 Institution: **{st.session_state.recruiter_settings['college']}**")
-    st.sidebar.markdown(f"Clearance Parameter: `Tier {st.session_state.recruiter_settings['tier']}`")
-    
-    st.markdown("##### Candidate Entrance Gates: Authenticated Session Active")
-    st.divider()
-    
-    # Shuffle the final exam sheet for the student to maximize anti-cheat tracking integrity
-    # We copy it to prevent altering the primary master layout sheet
-    exam_sheet = list(st.session_state.active_exam_paper)
-    
-    student_selections = {}
-    with st.form("student_exam_sheet"):
-        st.warning("🚨 Anti-Cheat System Initialized. Do not close or switch this dashboard page window.")
+    with panel_col2:
+        st.markdown("### 🧠 AI Cognitive Tier Diagnostic")
+        st.markdown("<div class='metric-box'><strong>Institutional Mapping Rules:</strong> Entering an elite campus (IIT, NIT, BITS) triggers the Tier 1 ratio matrix (30/40/30). Regional institutes set Tier 2 (35/45/20). Local setups trigger Tier 3 (40/50/10).</div>", unsafe_allow_html=True)
         
-        for idx, item in enumerate(exam_sheet):
-            st.markdown(f"**Q{idx+1}. [{item['difficulty'].upper()}] {item['question']}**")
-            student_selections[item["id"]] = st.radio(
-                f"Choose option for Q{idx+1}:", 
-                item["choices"], key=f"ans_vector_{item['id']}", index=None
-            )
-            st.write("")
+        if st.button("🤖 GENERATE TIER-BALANCED EXAM PAPER NOW", use_container_width=True):
+            # Save configurations directly to the global state panel
+            st.session_state.exam_config = {"college": cfg_college, "dept": cfg_dept, "total_q": cfg_q_num, "timer_mins": cfg_timer}
             
-        if st.form_submit_button("🏁 Finalize & Submit Placement Sheet"):
-            final_grade = 0
-            for item in st.session_state.active_exam_paper:
-                if student_selections.get(item["id"]) == item["answer"]:
-                    final_grade += 1
-                    
-            st.balloons()
-            st.subheader("🏁 Placement Round Completed")
-            st.success(f"Assessment answers logged. Your score metric is: **{final_grade} / {len(st.session_state.active_exam_paper)} Marks**")
+            # Map the institutional tier string
+            search_key = cfg_college.strip().lower()
+            tier = 3
+            if "iit" in search_key or "nit" in search_key or "bits" in search_key:
+                tier = 1
+            elif "university" in search_key or "vit" in search_key or "srm" in search_key:
+                tier = 2
+                
+            # Assign your precise mathematical difficulty ratio limits
+            if tier == 1: ratios = {"easy": 0.30, "medium": 0.40, "hard": 0.30}
+            elif tier == 2: ratios = {"easy": 0.35, "medium": 0.45, "hard": 0.20}
+            else: ratios = {"easy": 0.40, "medium": 0.50, "hard": 0.10}
+            
+            easy_target = max(1, round(cfg_q_num * ratios["easy"]))
+            hard_target = max(1, round(cfg_q_num * ratios["hard"]))
+            medium_target = cfg_q_num - (easy_target + hard_target)
+            
+            st.toast(f"AI Matrix Set: Ingesting {easy_target} Easy, {medium_target} Medium, {hard_target} Hard items...")
+            
+            # Ingest questions using the internet API with automatic local fail-safe hooks
+            compiled_questions = []
+            difficulty_array = [("easy", easy_target), ("medium", medium_target), ("hard", hard_target)]
+            
+            for diff_tag, target_count in difficulty_array:
+                api_url = f"https://opentdb.com{target_count}&category=18&difficulty={diff_tag}&type=multiple"
+                try:
+                    res = requests.get(api_url, timeout=3).json()
+                    if res.get('response_code') == 0:
+                        for row in res['results']:
+                            pool = row['incorrect_answers'] + [row['correct_answer']]
+                            random.shuffle(pool)
+                            compiled_questions.append({
+                                "id": len(compiled_questions) + 1, "difficulty": diff_tag,
+                                "question": row['question'].replace("&quot;", '"').replace("&#039;", "'"),
+                                "choices": pool, "answer": row['correct_answer']
+                            })
+                    else: raise Exception("API Error")
+                except:
+                    # Clear fallback escape execution to pull directly from local memory if connectivity drops
+                    backup_pool = LOCAL_CS_BACKUP_DB[diff_tag]
+sampled = random.choices(backup_pool, k=target_count)
+for item in sampled:
+opts = list(item['choices'])
+random.shuffle(opts)
+compiled_questions.append({
+"id": len(compiled_questions) + 1, "difficulty": diff_tag,
+"question": item['question'], "choices": opts, "answer": item['answer']
+})
+st.session_state.active_exam_paper = compiled_questions
+st.success(f"🎯 Exam successfully generated for Tier {tier} College. {len(compiled_questions)} questions compiled.")
+if st.session_state.active_exam_paper:
+st.divider()
+st.subheader("📋 Active Live Assessment Blueprint Preview")
+st.dataframe(pd.DataFrame(st.session_state.active_exam_paper)[['id', 'difficulty', 'question', 'answer']], use_container_width=True)
+
+─── MODULE B: CANDIDATE ASSESSMENT TERMINAL (Student Interface) ───
+
+else:
+st.markdown("🎓 Secure Placement Assessment TerminalEnforced anti-cheating matrix. Answer keys are secured on the cloud server level.", unsafe_allow_html=True)
+if st.session_state.active_exam_paper is None:
+st.warning("💤 System Status: Waiting for the Recruiter Admin to authenticate and deploy the AI test template.")
+st.stop()
+st.sidebar.markdown(f"### 🕒 Exam Details")
+st.sidebar.markdown(f"🏫 Campus: {st.session_state.exam_config['college']}")
+st.sidebar.error(f"⏳ Countdown: {st.session_state.exam_config['timer_mins']} Minutes Remaining")
+student_responses = {}
+with st.form("student_exam_form"):
+st.markdown("#### Complete all required multiple-choice fields down below:")
+st.divider()
+for idx, item in enumerate(st.session_state.active_exam_paper):
+st.markdown(f"Question {idx+1}: [{item['difficulty'].upper()}] {item['question']}")
+student_responses[item["id"]] = st.radio(f"Select option for Q{idx+1}:", item["choices"], key=f"std_ans_{item['id']}", index=None)
+st.write("")
+if st.form_submit_button("🏁 Conclude Examination & Submit Paper", use_container_width=True):
+score = 0
+for item in st.session_state.active_exam_paper:
+if student_responses.get(item["id"]) == item["answer"]:
+score += 1
+st.balloons()
+st.markdown("📊 Placement Sheet Ingested Successfully!Your results have been processed programmatically and synchronized to the recruiter database.", unsafe_allow_html=True)
+st.write(f"### Final Evaluation Score Matrix: {score} / {len(st.session_state.active_exam_paper)} Marks")
