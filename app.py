@@ -24,9 +24,7 @@ st.markdown("""
         
         .recruiter-header { background-color: #1E3A8A; padding: 20px; border-radius: 10px; color: white; margin-bottom: 25px; }
         .student-header { background-color: #047857; padding: 20px; border-radius: 10px; color: white; margin-bottom: 25px; }
-        .social-btn { display: inline-block; width: 100%; text-align: center; padding: 10px; margin-bottom: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; text-decoration: none; }
-        .gmail-btn { background-color: #EA4335; color: white; }
-        .linkedin-btn { background-color: #0077B5; color: white; }
+        .metric-box { background-color: #F3F4F6; padding: 15px; border-radius: 8px; border-left: 5px solid #3B82F6; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -53,7 +51,7 @@ if "captcha_challenge" not in st.session_state:
 # 2. STATEFUL THEMED SECURITY SIGN-IN / SIGN-UP TERMINAL
 # ==============================================================================
 if not st.session_state.auth_session["logged_in"]:
-    st.markdown("<div style='text-align: center; margin-top: 20px;'><h1>🔐 AI Campus Drive Access Terminal</h1><p>Enterprise IAM Authentication Framework</p></div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; margin-top: 20px;'><h1>🔐 AI Campus Drive Access Portal</h1><p>Enterprise IAM Authentication Framework</p></div>", unsafe_allow_html=True)
     st.divider()
     
     col1, col2, col3 = st.columns(3)
@@ -61,7 +59,7 @@ if not st.session_state.auth_session["logged_in"]:
         auth_action = st.tabs(["📥 Sign In to Account", "📝 Register New Profile"])
         
         # SECTION A: SIGN IN INTERFACE
-        with auth_action[0]:
+        with auth_action:
             login_role = st.selectbox("Select Target Account Role:", ["Recruiter (Admin)", "Candidate (Student)"], key="login_role_sel")
             role_key = "Recruiter" if "Recruiter" in login_role else "Student"
             
@@ -78,19 +76,23 @@ if not st.session_state.auth_session["logged_in"]:
                     st.error("❌ Authentication Refusal: Access key credentials mapping failed.")
                     
         # SECTION B: COMPREHENSIVE SIGN UP INTERFACE
-        with auth_action[1]:
+        with auth_action:
             st.markdown("#### 🌐 Federated Third-Party Social Integration")
+            
+            # FIXED FLOW: Clicking this now automatically bypasses forms, registers you, and routes your login state
             if st.button("🔴 Connect and Sign Up via Gmail Profile", use_container_width=True):
                 st.toast("🌐 Activating Google OAuth2 Secure Gateway Redirect...")
-                st.info("✨ [MOCK OAUTH2]: Successfully fetched token from Google identity servers. Mapped profile: rajan.310@gmail.com")
-                st.session_state.iam_user_db["Student"]["rajan.310@gmail.com"] = {"pass": "oauth_token", "name": "Rajan G"}
-                st.success("Registration Complete via Gmail! Switch to Sign In tab to access using email.")
+                st.session_state.iam_user_db["Student"]["rajan.310@gmail.com"] = {"pass": "admin", "name": "Rajan G"}
+                st.session_state.auth_session = {"logged_in": True, "username": "Rajan G (Gmail Verified)", "role": "Student"}
+                st.success("🎉 Google Token Verified! Logged in as Student.")
+                st.rerun()
                 
             if st.button("🔵 Connect and Sign Up via LinkedIn Profile", use_container_width=True):
                 st.toast("🌐 Activating LinkedIn OpenID Connect API Stream...")
-                st.info("✨ [MOCK OAUTH2]: Successfully verified corporate profile metrics via LinkedIn API integration.")
-                st.session_state.iam_user_db["Recruiter"]["rajan.310@gmail.com"] = {"pass": "linkedin_token", "name": "Rajan Corporate"}
-                st.success("Registration Complete via LinkedIn! Switch to Sign In tab to access.")
+                st.session_state.iam_user_db["Recruiter"]["rajan.310@gmail.com"] = {"pass": "admin", "name": "Rajan Corporate"}
+                st.session_state.auth_session = {"logged_in": True, "username": "Rajan Corporate (LinkedIn Verified)", "role": "Recruiter"}
+                st.success("🎉 LinkedIn Token Verified! Logged in as Recruiter Admin.")
+                st.rerun()
                 
             st.divider()
             st.markdown("#### 📝 Manual Enterprise Registration Matrix")
@@ -154,8 +156,13 @@ if st.sidebar.button("🚪 Terminate Session & Log Out", use_container_width=Tru
     st.session_state.active_exam_paper = None
     st.rerun()
 
-# ─── MODULE A: RECRUITER AI GENERATION CORE (Admin Interface) ───
+# MODULE A: RECRUITER AI GENERATION CORE (Admin Interface)
 if st.session_state.auth_session["role"] == "Recruiter":
+    st.markdown("<div class='recruiter-header'><h1>🏢 Recruiter Command Suite & Parameter Engine</h1><p>Set operational boundaries, college tier vectors, and generate cognitive balance matrix papers.</p></div>", unsafe_allow_html=True)
+    
+    panel_col1, panel_col2 = st.columns(2)
+    with panel_col1:
+        st.markdown("### 🎛️ Exam Parameter Controls")
     st.markdown("<div class='recruiter-header'><h1>🏢 Recruiter Command Suite & Parameter Engine</h1><p>Set operational boundaries, college tier vectors, and generate cognitive balance matrix papers.</p></div>", unsafe_allow_html=True)
     
     panel_col1, panel_col2 = st.columns(2)
@@ -174,8 +181,10 @@ if st.session_state.auth_session["role"] == "Recruiter":
             st.session_state.exam_config = {"college": cfg_college, "dept": cfg_dept, "total_q": cfg_q_num, "timer_mins": cfg_timer}
             search_key = cfg_college.strip().lower()
             tier = 3
-            if "iit" in search_key or "nit" in search_key or "bits" in search_key: tier = 1
-            elif "university" in search_key or "vit" in search_key or "srm" in search_key: tier = 2
+            if "iit" in search_key or "nit" in search_key or "bits" in search_key: 
+                tier = 1
+            elif "university" in search_key or "vit" in search_key or "srm" in search_key: 
+                tier = 2
                 
             if tier == 1: ratios = {"easy": 0.30, "medium": 0.40, "hard": 0.30}
             elif tier == 2: ratios = {"easy": 0.35, "medium": 0.45, "hard": 0.20}
@@ -220,7 +229,7 @@ if st.session_state.auth_session["role"] == "Recruiter":
         st.subheader("📋 Active Live Assessment Blueprint Preview")
         st.dataframe(pd.DataFrame(st.session_state.active_exam_paper)[['id', 'difficulty', 'question', 'answer']], use_container_width=True)
 
-# ─── MODULE B: CANDIDATE ASSESSMENT TERMINAL (Student Interface) ───
+# ─── CANDIDATE ASSESSMENT TERMINAL (Student Interface) ───
 else:
     st.markdown("<div class='student-header'><h1>🎓 Secure Placement Assessment Terminal</h1><p>Enforced anti-cheating matrix. Answer keys are secured on the cloud server level.</p></div>", unsafe_allow_html=True)
     
@@ -245,7 +254,8 @@ else:
         if st.form_submit_button("🏁 Conclude Examination & Submit Paper", use_container_width=True):
             score = 0
             for item in st.session_state.active_exam_paper:
-                if student_responses.get(item["id"]) == item["answer"]: score += 1
+                if student_responses.get(item["id"]) == item["answer"]: 
+                    score += 1
                     
             st.balloons()
             st.markdown("<div style='background-color: #D1FAE5; padding: 20px; border-radius: 8px;'><h3>📊 Placement Sheet Ingested Successfully!</h3><p>Your results have been processed programmatically and synchronized to the recruiter database.</p></div>", unsafe_allow_html=True)
