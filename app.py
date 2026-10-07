@@ -232,75 +232,65 @@ if active_user_role == "Recruiter":
             st.markdown("### 🧠 AI Cognitive Tier Diagnostic")
             st.markdown("<div class='metric-box'><strong>Institutional Mapping Rules:</strong> Entering an elite campus (IIT, NIT, BITS) triggers the Tier 1 ratio matrix (30/40/30). Regional institutes set Tier 2 (35/45/20). Local setups trigger Tier 3 (40/50/10).</div>", unsafe_allow_html=True)
             
-            if st.button("🤖 GENERATE TIER-BALANCED EXAM PAPER NOW", use_container_width=True):
-                st.session_state.exam_config = {"college": cfg_college, "dept": cfg_dept, "total_q": cfg_q_num, "timer_mins": cfg_timer}
-                search_key = cfg_college.strip().lower()
-                tier = 3
-                if "iit" in search_key or "nit" in search_key or "bits" in search_key: tier = 1
-                elif "university" in search_key or "vit" in search_key or "srm" in search_key: tier = 2
+        if st.button("🤖 GENERATE TIER-BALANCED EXAM PAPER NOW", use_container_width=True):
+            st.session_state.exam_config = {"college": cfg_college, "dept": cfg_dept, "total_q": cfg_q_num, "timer_mins": cfg_timer}
+            search_key = cfg_college.strip().lower()
+            tier = 3
+            if "iit" in search_key or "nit" in search_key or "bits" in search_key: tier = 1
+            elif "university" in search_key or "vit" in search_key or "srm" in search_key: tier = 2
+                
+            if tier == 1: ratios = {"easy": 0.30, "medium": 0.40, "hard": 0.30}
+            elif tier == 2: ratios = {"easy": 0.35, "medium": 0.45, "hard": 0.20}
+            else: ratios = {"easy": 0.40, "medium": 0.50, "hard": 0.10}
+            
+            easy_target = max(1, round(cfg_q_num * ratios["easy"]))
+            hard_target = max(1, round(cfg_q_num * ratios["hard"]))
+            medium_target = cfg_q_num - (easy_target + hard_target)
+
+            st.toast(f"AI Core Mapping Profile: Accessing live repository data banks for {cfg_dept}...")
+            
+            compiled_questions = []
+            difficulty_array = [("easy", easy_target), ("medium", medium_target), ("hard", hard_target)]
+            
+            designation_endpoints = {
+                "Software Developer Profile": "https://githubusercontent.com",
+                "QA Automation Tester Profile": "https://githubusercontent.com",
+                "Cloud Solutions Architect Profile": "https://githubusercontent.com"
+            }
+            
+            target_url = designation_endpoints.get(cfg_dept, "https://githubusercontent.com")
+            
+            try:
+                res = requests.get(target_url, timeout=5).json()
+                all_questions_pool = res.get("questions", [])
+                
+                for diff_tag, target_count in difficulty_array:
+                    filtered_pool = [q for q in all_questions_pool if q.get("difficulty", "").lower() == diff_tag]
                     
-                if tier == 1: ratios = {"easy": 0.30, "medium": 0.40, "hard": 0.30}
-                elif tier == 2: ratios = {"easy": 0.35, "medium": 0.45, "hard": 0.20}
-                else: ratios = {"easy": 0.40, "medium": 0.50, "hard": 0.10}
-                
-                easy_target = max(1, round(cfg_q_num * ratios["easy"]))
-                hard_target = max(1, round(cfg_q_num * ratios["hard"]))
-                medium_target = cfg_q_num - (easy_target + hard_target)
-                
-                                st.toast(f"AI Core Mapping Profile: Accessing live repository data banks for {cfg_dept}...")
-                
-                compiled_questions = []
-                difficulty_array = [("easy", easy_target), ("medium", medium_target), ("hard", hard_target)]
-                
-                # Mapping target designations directly to multi-thousand question open repositories
-                designation_endpoints = {
-                    "Software Developer Profile": "https://githubusercontent.com",
-                    "QA Automation Tester Profile": "https://githubusercontent.com",
-                    "Cloud Solutions Architect Profile": "https://githubusercontent.com"
-                }
-                
-                target_url = designation_endpoints.get(cfg_dept, "https://githubusercontent.com")
-                
-                try:
-                    res = requests.get(target_url, timeout=5).json()
-                    all_questions_pool = res.get("questions", [])
-                    
-                    for diff_tag, target_count in difficulty_array:
-                        # Dynamic AI Profile Cross-Verification Filter
-                        filtered_pool = [q for q in all_questions_pool if q.get("difficulty", "").lower() == diff_tag]
+                    if len(filtered_pool) >= target_count: sampled_pool = random.sample(filtered_pool, target_count)
+                    else: sampled_pool = filtered_pool
                         
-                        if len(filtered_pool) >= target_count:
-                            sampled_pool = random.sample(filtered_pool, target_count)
-                        else:
-                            sampled_pool = filtered_pool
-                            
-                        for row in sampled_pool:
-                            compiled_questions.append({
-                                "id": len(compiled_questions) + 1,
-                                "difficulty": diff_tag,
-                                "question": row["title"],
-                                "choices": row["choices"],
-                                "answer": row["correct_answer"]
-                            })
-                except Exception as e:
-                    # Adaptive Fallback Layer: Uses local CS matrix if connectivity drops
-                    from questions import LOCAL_CS_BACKUP_DB
-                    for diff_tag, target_count in difficulty_array:
-                        backup_pool = LOCAL_CS_BACKUP_DB[diff_tag]
-                        sampled = random.choices(backup_pool, k=target_count)
-                        for item in sampled:
-                            opts = list(item['choices'])
-                            random.shuffle(opts)
-                            compiled_questions.append({
-                                "id": len(compiled_questions) + 1, 
-                                "difficulty": diff_tag,
-                                "question": f"[{cfg_dept.split()[0]} Core Check] " + item['question'], 
-                                "choices": opts, 
-                                "answer": item['answer']
-                            })
-                            
-                st.session_state.active_exam_paper = compiled_questions
-                st.success(f"🎯 Designation-Oriented Exam Paper compiled! {len(compiled_questions)} role-specific questions loaded.")
+                    for row in sampled_pool:
+                        compiled_questions.append({
+                            "id": len(compiled_questions) + 1, "difficulty": diff_tag,
+                            "question": row["title"], "choices": row["choices"], "answer": row["correct_answer"]
+                        })
+            except Exception as e:
+                from questions import LOCAL_CS_BACKUP_DB
+                for diff_tag, target_count in difficulty_array:
+                    backup_pool = LOCAL_CS_BACKUP_DB[diff_tag]
+                    sampled = random.choices(backup_pool, k=target_count)
+                    for item in sampled:
+                        opts = list(item['choices'])
+                        random.shuffle(opts)
+                        compiled_questions.append({
+                            "id": len(compiled_questions) + 1, "difficulty": diff_tag,
+                            "question": f"[{cfg_dept.split()[0]} Core Check] " + item['question'], "choices": opts, "answer": item['answer']
+                        })
+                        
+            st.session_state.active_exam_paper = compiled_questions
+            st.success(f"🎯 Designation-Oriented Exam Paper compiled! {len(compiled_questions)} role-specific questions loaded.")
+
 
         if st.session_state.active_exam_paper:
             st.divider()
