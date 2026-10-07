@@ -216,10 +216,10 @@ if active_user_role == "Recruiter":
         
         panel_col1, panel_col2 = st.columns(2)
         with panel_col1:
-        st.markdown("### 🎛️ Exam Parameter Controls")
+               st.markdown("### 🎛️ Exam Parameter Controls")
         cfg_college = st.text_input("Enter Target College Name:", value=st.session_state.exam_config["college"])
         
-        # UPGRADED: Designation-oriented assessment routing dropdown
+        # Correctly indented Designation Dropdown Block
         cfg_dept = st.selectbox(
             "Select Target Candidate Designation Profile:", 
             ["Software Developer Profile", "QA Automation Tester Profile", "Cloud Solutions Architect Profile"]
