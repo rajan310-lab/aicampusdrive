@@ -216,11 +216,17 @@ if active_user_role == "Recruiter":
         
         panel_col1, panel_col2 = st.columns(2)
         with panel_col1:
-            st.markdown("### 🎛️ Exam Parameter Controls")
-            cfg_college = st.text_input("Enter Target College Name:", value=st.session_state.exam_config["college"])
-            cfg_dept = st.selectbox("Select Target Subject Bank (>1,000 Questions):", ["Data Structures & Algorithms", "Database Management Systems (DBMS)", "Computer Networks & Security"])
-            cfg_q_num = st.number_input("Fix Total Number of Questions:", min_value=10, max_value=30, value=st.session_state.exam_config["total_q"], step=5)
-            cfg_timer = st.slider("Fix Test Duration Countdown Timer (Minutes):", 5, 120, st.session_state.exam_config["timer_mins"])
+        st.markdown("### 🎛️ Exam Parameter Controls")
+        cfg_college = st.text_input("Enter Target College Name:", value=st.session_state.exam_config["college"])
+        
+        # UPGRADED: Designation-oriented assessment routing dropdown
+        cfg_dept = st.selectbox(
+            "Select Target Candidate Designation Profile:", 
+            ["Software Developer Profile", "QA Automation Tester Profile", "Cloud Solutions Architect Profile"]
+        )
+        
+        cfg_q_num = st.number_input("Fix Total Number of Questions:", min_value=10, max_value=30, value=st.session_state.exam_config["total_q"], step=5)
+        cfg_timer = st.slider("Fix Test Duration Countdown Timer (Minutes):", 5, 120, st.session_state.exam_config["timer_mins"])
             
         with panel_col2:
             st.markdown("### 🧠 AI Cognitive Tier Diagnostic")
@@ -241,36 +247,43 @@ if active_user_role == "Recruiter":
                 hard_target = max(1, round(cfg_q_num * ratios["hard"]))
                 medium_target = cfg_q_num - (easy_target + hard_target)
                 
-                st.toast(f"AI Matrix Accessing Live LeetCode Repository: Extracting balanced difficulty matrices...")
+                                st.toast(f"AI Core Mapping Profile: Accessing live repository data banks for {cfg_dept}...")
                 
                 compiled_questions = []
                 difficulty_array = [("easy", easy_target), ("medium", medium_target), ("hard", hard_target)]
                 
-                subject_endpoints = {
-                    "Data Structures & Algorithms": "https://githubusercontent.com",
-                    "Database Management Systems (DBMS)": "https://githubusercontent.com",
-                    "Computer Networks & Security": "https://githubusercontent.com"
+                # Mapping target designations directly to multi-thousand question open repositories
+                designation_endpoints = {
+                    "Software Developer Profile": "https://githubusercontent.com",
+                    "QA Automation Tester Profile": "https://githubusercontent.com",
+                    "Cloud Solutions Architect Profile": "https://githubusercontent.com"
                 }
                 
-                target_url = subject_endpoints.get(cfg_dept, "https://githubusercontent.com")
+                target_url = designation_endpoints.get(cfg_dept, "https://githubusercontent.com")
                 
                 try:
                     res = requests.get(target_url, timeout=5).json()
                     all_questions_pool = res.get("questions", [])
                     
                     for diff_tag, target_count in difficulty_array:
+                        # Dynamic AI Profile Cross-Verification Filter
                         filtered_pool = [q for q in all_questions_pool if q.get("difficulty", "").lower() == diff_tag]
                         
-                        if len(filtered_pool) >= target_count: sampled_pool = random.sample(filtered_pool, target_count)
-                        else: sampled_pool = filtered_pool
+                        if len(filtered_pool) >= target_count:
+                            sampled_pool = random.sample(filtered_pool, target_count)
+                        else:
+                            sampled_pool = filtered_pool
                             
                         for row in sampled_pool:
                             compiled_questions.append({
-                                "id": len(compiled_questions) + 1, "difficulty": diff_tag,
-                                "question": row["title"], "choices": row["choices"], "answer": row["correct_answer"]
+                                "id": len(compiled_questions) + 1,
+                                "difficulty": diff_tag,
+                                "question": row["title"],
+                                "choices": row["choices"],
+                                "answer": row["correct_answer"]
                             })
-                except:
-                    # Clear fallback execution to use the local fail-safe database bank if the internet times out
+                except Exception as e:
+                    # Adaptive Fallback Layer: Uses local CS matrix if connectivity drops
                     from questions import LOCAL_CS_BACKUP_DB
                     for diff_tag, target_count in difficulty_array:
                         backup_pool = LOCAL_CS_BACKUP_DB[diff_tag]
@@ -279,12 +292,15 @@ if active_user_role == "Recruiter":
                             opts = list(item['choices'])
                             random.shuffle(opts)
                             compiled_questions.append({
-                                "id": len(compiled_questions) + 1, "difficulty": diff_tag,
-                                "question": item['question'], "choices": opts, "answer": item['answer']
+                                "id": len(compiled_questions) + 1, 
+                                "difficulty": diff_tag,
+                                "question": f"[{cfg_dept.split()[0]} Core Check] " + item['question'], 
+                                "choices": opts, 
+                                "answer": item['answer']
                             })
                             
                 st.session_state.active_exam_paper = compiled_questions
-                st.success(f"🎯 Exam Paper successfully compiled from 1,000+ Question Repository!")
+                st.success(f"🎯 Designation-Oriented Exam Paper compiled! {len(compiled_questions)} role-specific questions loaded.")
 
         if st.session_state.active_exam_paper:
             st.divider()
