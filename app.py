@@ -6,10 +6,6 @@ import random
 import pytz
 from datetime import datetime
 
-# Import our custom database structures from our independent module files
-from questions import LOCAL_CS_BACKUP_DB
-from config_center import render_system_configuration_center
-
 # ==============================================================================
 # SECTION 1: APPLICATION ENVIRONMENT THEMING & STATE INITIALIZATION
 # ==============================================================================
@@ -43,8 +39,8 @@ if "iam_user_db" not in st.session_state:
 theme_color = "#1E3A8A" if st.session_state.ui_theme == "Deep Corporate Blue" else "#1F2937"
 st.markdown(f"""
     <style>
+        /* FIX: Removed header hidden rule to ensure sidebar button renders perfectly */
         #MainMenu {{visibility: hidden;}}
-        header {{visibility: hidden;}}
         footer {{visibility: hidden;}}
         .viewerBadge_link__1S137 {{display: none !important;}}
         
@@ -58,6 +54,21 @@ st.markdown(f"""
 if "captcha_challenge" not in st.session_state:
     st.session_state.captcha_challenge = "".join(random.choices("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", k=5))
 
+# Integrated Self-Contained Fail-safe Question Bank
+LOCAL_CS_BACKUP_DB = {
+    "easy": [
+        {"question": "What is the primary function of an Operating System Kernel?", "choices": ["Memory/Resource Management", "Web Browsing", "Compiling Code", "Hardware Manufacturing"], "answer": "Memory/Resource Management"},
+        {"question": "Which programming language uses automated Garbage Collection?", "choices": ["Java", "C++", "C", "Assembly"], "answer": "Java"}
+    ],
+    "medium": [
+        {"question": "What is the average time complexity of a QuickSort algorithm loop?", "choices": ["O(n log n)", "O(n^2)", "O(log n)", "O(n)"], "answer": "O(n log n)"},
+        {"question": "Which data structure is best optimized for implementing a BFS graph traversal?", "choices": ["Queue", "Stack", "Binary Tree", "Priority Heap"], "answer": "Queue"}
+    ],
+    "hard": [
+        {"question": "Which concurrency deadlock condition is violated by implementing a strict resource hierarchy ordering?", "choices": ["Circular Wait", "Mutual Exclusion", "Hold and Wait", "No Preemption"], "answer": "Circular Wait"},
+        {"question": "What scheduling anomaly occurs when adding more page frames increases page faults in a FIFO memory setup?", "choices": ["Belady's Anomaly", "Priority Inversion", "Thrashing Equilibrium", "Convoy Effect Matrix"], "answer": "Belady's Anomaly"}
+    ]
+}
 # ==============================================================================
 # SECTION 2: STATEFUL THEMED SECURITY SIGN-IN / SIGN-UP TERMINAL
 # ==============================================================================
@@ -269,6 +280,7 @@ if active_user_role == "Recruiter":
             st.info("💤 Ledger State: Waiting for candidates to submit finalized examination sheets.")
         else:
             st.dataframe(pd.DataFrame(st.session_state.student_scores_db), use_container_width=True)
+
 # ─── MODULE B: CANDIDATE ASSESSMENT TERMINAL ───
 else:
     if app_view == "🎓 Active Placement Exam Window":
@@ -303,12 +315,17 @@ else:
                         "Campus": st.session_state.exam_config["college"],
                         "Subject Stream": st.session_state.exam_config["dept"],
                         "Marks Ingested": f"{score} / {len(st.session_state.active_exam_paper)}"
-                    })
-                    st.balloons()
-                    st.markdown("<div style='background-color: #D1FAE5; padding: 20px; border-radius: 8px;'><h3>📊 Placement Sheet Ingested Successfully!</h3><p>Your results have been processed programmatically and synchronized to the recruiter database.</p></div>", unsafe_allow_html=True)
-                    st.write(f"### Final Evaluation Score Matrix: `{score} / {len(st.session_state.active_exam_paper)} Marks`")
+                        })
+                        st.balloons()
+                        st.markdown("📊 Placement Sheet Ingested Successfully!Your results have been processed programmatically and synchronized to the recruiter database.", unsafe_allow_html=True)
+                        st.write(f"### Final Evaluation Score Matrix: {score} / {len(st.session_state.active_exam_paper)} Marks")
 
-# ==============================================================================
-# ROUTER CALL ENTRY POINT FOR DYNAMIC PARAMETER RECOVERY
-# ==============================================================================
+==============================================================================
+
+
+ROUTER CALL ENTRY POINT FOR DYNAMIC PARAMETER RECOVERY
+
+
+==============================================================================
+
 render_system_configuration_center(app_view, active_user_role, active_user_id, profile_data)
