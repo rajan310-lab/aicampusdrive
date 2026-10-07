@@ -7,10 +7,45 @@ import pytz
 from datetime import datetime
 
 # ==============================================================================
-# SECTION 1: APPLICATION ENVIRONMENT THEMING & STATE INITIALIZATION
+# SECTION 1: GLOBAL CONFIGURATION CENTER FUNCTION & ENVIRONMENT THEMING
 # ==============================================================================
 st.set_page_config(page_title="AI Campus Drive Suite", layout="wide")
 ist = pytz.timezone('Asia/Kolkata')
+
+# Embedded Configuration function to eliminate file-linking NameErrors completely
+def render_system_configuration_center(app_view, active_user_role, active_user_id, profile_data):
+    if app_view == "⚙️ System Configuration Settings":
+        st.header("⚙️ System Configuration & Personalization Settings")
+        st.markdown("Manage custom application theme parameters and review account credential metadata variables.")
+        st.divider()
+        
+        set_tab1, set_tab2 = st.tabs(["🎨 Interface Personalization & Themes", "👤 Profile Metadata Account Ledger"])
+        
+        with set_tab1:
+            st.subheader("🎨 Application Layout Visual Customization")
+            chosen_theme = st.selectbox(
+                "Select Global Header Layout Palette Suffix:", 
+                ["Deep Corporate Blue", "Minimalist Midnight Charcoal"], 
+                index=0 if st.session_state.ui_theme == "Deep Corporate Blue" else 1
+            )
+            if st.button("💾 Apply Layout Customization Styles", use_container_width=True):
+                st.session_state.ui_theme = chosen_theme
+                st.success("Visual styles updated successfully! Re-rendering layout matrix...")
+                st.rerun()
+                
+        with set_tab2:
+            st.subheader("👤 User Profile Registration Database Metadata")
+            edit_name = st.text_input("Profile Display Full Legal Name:", value=profile_data["name"])
+            edit_contact = st.text_input("Registered Contact Mobile Field (+91):", value=profile_data["contact"])
+            edit_address = st.text_area("Registered Permanent Location / Corporate Address:", value=profile_data["address"])
+            st.text_input("Primary Communication Authentication Email ID (Locked):", value=profile_data["email"], disabled=True)
+            
+            if st.button("💾 Update Account Roster Ledger Profile", use_container_width=True):
+                st.session_state.iam_user_db[active_user_role][active_user_id]["name"] = edit_name
+                st.session_state.iam_user_db[active_user_role][active_user_id]["contact"] = edit_contact
+                st.session_state.iam_user_db[active_user_role][active_user_id]["address"] = edit_address
+                st.success("Roster record metadata fields updated successfully on the server state layer!")
+                st.rerun()
 
 # Initialize global layout state variables if not present
 if "auth_session" not in st.session_state:
@@ -39,11 +74,9 @@ if "iam_user_db" not in st.session_state:
 theme_color = "#1E3A8A" if st.session_state.ui_theme == "Deep Corporate Blue" else "#1F2937"
 st.markdown(f"""
     <style>
-        /* FIX: Removed header hidden rule to ensure sidebar button renders perfectly */
         #MainMenu {{visibility: hidden;}}
         footer {{visibility: hidden;}}
         .viewerBadge_link__1S137 {{display: none !important;}}
-        
         .recruiter-header {{ background-color: {theme_color}; padding: 20px; border-radius: 10px; color: white; margin-bottom: 25px; }}
         .student-header {{ background-color: #047857; padding: 20px; border-radius: 10px; color: white; margin-bottom: 25px; }}
         .metric-box {{ background-color: #F3F4F6; padding: 15px; border-radius: 8px; border-left: 5px solid #3B82F6; }}
@@ -53,22 +86,6 @@ st.markdown(f"""
 # Generate a persistent CAPTCHA token if not present
 if "captcha_challenge" not in st.session_state:
     st.session_state.captcha_challenge = "".join(random.choices("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", k=5))
-
-# Integrated Self-Contained Fail-safe Question Bank
-LOCAL_CS_BACKUP_DB = {
-    "easy": [
-        {"question": "What is the primary function of an Operating System Kernel?", "choices": ["Memory/Resource Management", "Web Browsing", "Compiling Code", "Hardware Manufacturing"], "answer": "Memory/Resource Management"},
-        {"question": "Which programming language uses automated Garbage Collection?", "choices": ["Java", "C++", "C", "Assembly"], "answer": "Java"}
-    ],
-    "medium": [
-        {"question": "What is the average time complexity of a QuickSort algorithm loop?", "choices": ["O(n log n)", "O(n^2)", "O(log n)", "O(n)"], "answer": "O(n log n)"},
-        {"question": "Which data structure is best optimized for implementing a BFS graph traversal?", "choices": ["Queue", "Stack", "Binary Tree", "Priority Heap"], "answer": "Queue"}
-    ],
-    "hard": [
-        {"question": "Which concurrency deadlock condition is violated by implementing a strict resource hierarchy ordering?", "choices": ["Circular Wait", "Mutual Exclusion", "Hold and Wait", "No Preemption"], "answer": "Circular Wait"},
-        {"question": "What scheduling anomaly occurs when adding more page frames increases page faults in a FIFO memory setup?", "choices": ["Belady's Anomaly", "Priority Inversion", "Thrashing Equilibrium", "Convoy Effect Matrix"], "answer": "Belady's Anomaly"}
-    ]
-}
 # ==============================================================================
 # SECTION 2: STATEFUL THEMED SECURITY SIGN-IN / SIGN-UP TERMINAL
 # ==============================================================================
@@ -253,6 +270,8 @@ if active_user_role == "Recruiter":
                                 "question": row["title"], "choices": row["choices"], "answer": row["correct_answer"]
                             })
                 except:
+                    # Clear fallback execution to use the local fail-safe database bank if the internet times out
+                    from questions import LOCAL_CS_BACKUP_DB
                     for diff_tag, target_count in difficulty_array:
                         backup_pool = LOCAL_CS_BACKUP_DB[diff_tag]
                         sampled = random.choices(backup_pool, k=target_count)
@@ -312,21 +331,20 @@ else:
                         "Timestamp": datetime.now(ist).strftime('%H:%M:%S'),
                         "Student Email": active_user_id,
                         "Student Name": profile_data["name"],
-                        "Campus": st.session_state.exam_config["college"],
-                        "Subject Stream": st.session_state.exam_config["dept"],
-                        "Marks Ingested": f"{score} / {len(st.session_state.active_exam_paper)}"
-                        })
-                    st.balloons()
-                    st.markdown("📊 Placement Sheet Ingested Successfully!Your results have been processed programmatically and synchronized to the recruiter database.", unsafe_allow_html=True)
-                    st.write(f"### Final Evaluation Score Matrix: {score} / {len(st.session_state.active_exam_paper)} Marks")
+                    "Campus": st.session_state.exam_config["college"],
+                    "Subject Stream": st.session_state.exam_config["dept"],
+                    "Marks Ingested": f"{score} / {len(st.session_state.active_exam_paper)}"
+                })
+                st.balloons()
+                st.markdown("<div style='background-color: #D1FAE5; padding: 20px; border-radius: 8px;'><h3>📊 Placement Sheet Ingested Successfully!</h3><p>Your results have been processed programmatically and synchronized to the recruiter database.</p></div>", unsafe_allow_html=True)
+                st.write(f"### Final Evaluation Score Matrix: `{score} / {len(st.session_state.active_exam_paper)} Marks`")
 
 # ==============================================================================
 # ROUTER CALL ENTRY POINT FOR DYNAMIC PARAMETER RECOVERY
 # ==============================================================================
 render_system_configuration_center(
-    app_view=app_view, 
-    active_user_role=active_user_role, 
-    active_user_id=active_user_id, 
+    app_view=app_view,
+    active_user_role=active_user_role,
+    active_user_id=active_user_id,
     profile_data=profile_data
 )
-
