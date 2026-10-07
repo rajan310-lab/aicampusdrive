@@ -316,9 +316,9 @@ else:
                         "Subject Stream": st.session_state.exam_config["dept"],
                         "Marks Ingested": f"{score} / {len(st.session_state.active_exam_paper)}"
                         })
-                        st.balloons()
-                        st.markdown("📊 Placement Sheet Ingested Successfully!Your results have been processed programmatically and synchronized to the recruiter database.", unsafe_allow_html=True)
-                        st.write(f"### Final Evaluation Score Matrix: {score} / {len(st.session_state.active_exam_paper)} Marks")
+                    st.balloons()
+                    st.markdown("📊 Placement Sheet Ingested Successfully!Your results have been processed programmatically and synchronized to the recruiter database.", unsafe_allow_html=True)
+                    st.write(f"### Final Evaluation Score Matrix: {score} / {len(st.session_state.active_exam_paper)} Marks")
 
 ==============================================================================
 
