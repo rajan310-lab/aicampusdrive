@@ -320,12 +320,7 @@ else:
                     st.markdown("📊 Placement Sheet Ingested Successfully!Your results have been processed programmatically and synchronized to the recruiter database.", unsafe_allow_html=True)
                     st.write(f"### Final Evaluation Score Matrix: {score} / {len(st.session_state.active_exam_paper)} Marks")
 
-==============================================================================
-
 
 ROUTER CALL ENTRY POINT FOR DYNAMIC PARAMETER RECOVERY
-
-
-==============================================================================
 
 render_system_configuration_center(app_view, active_user_role, active_user_id, profile_data)
