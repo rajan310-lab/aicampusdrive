@@ -1,10 +1,13 @@
-# Unified Master Core: Save this file exactly as app.py
+# Main Application Dashboard: Save this file exactly as app.py
 import streamlit as st
 import pandas as pd
 import requests
 import random
 import pytz
 from datetime import datetime
+
+# Import our custom database from our separate file
+from questions import LOCAL_CS_BACKUP_DB
 
 # ==============================================================================
 # 1. ENTERPRISE THEMING, SECURITY VISIBILITY BLOCKS & TIMING CORE
@@ -53,22 +56,6 @@ if "active_exam_paper" not in st.session_state:
     st.session_state.active_exam_paper = None
 if "exam_config" not in st.session_state:
     st.session_state.exam_config = {"college": "IIT Delhi", "dept": "Computer Science (CSE)", "total_q": 10, "timer_mins": 30}
-
-# Local Fallback Data Bank to insulate the app against internet connection lag
-LOCAL_CS_BACKUP_DB = {
-    "easy": [
-        {"question": "What is the primary function of an Operating System Kernel?", "choices": ["Memory/Resource Management", "Web Browsing", "Compiling Code", "Hardware Manufacturing"], "answer": "Memory/Resource Management"},
-        {"question": "Which programming language uses automated Garbage Collection?", "choices": ["Java", "C++", "C", "Assembly"], "answer": "Java"}
-    ],
-    "medium": [
-        {"question": "What is the average time complexity of a QuickSort algorithm loop?", "choices": ["O(n log n)", "O(n^2)", "O(log n)", "O(n)"], "answer": "O(n log n)"},
-        {"question": "Which data structure is best optimized for implementing a BFS graph traversal?", "choices": ["Queue", "Stack", "Binary Tree", "Priority Heap"], "answer": "Queue"}
-    ],
-    "hard": [
-        {"question": "Which concurrency deadlock condition is violated by implementing a strict resource hierarchy ordering?", "choices": ["Circular Wait", "Mutual Exclusion", "Hold and Wait", "No Preemption"], "answer": "Circular Wait"},
-        {"question": "What scheduling anomaly occurs when adding more page frames increases page faults in a FIFO memory setup?", "choices": ["Belady's Anomaly", "Priority Inversion", "Thrashing Equilibrium", "Convoy Effect Matrix"], "answer": "Belady's Anomaly"}
-    ]
-}
 
 # ==============================================================================
 # 2. STATEFUL AUTHENTICATION SCREEN (Locks the system entirely)
@@ -167,28 +154,29 @@ if st.session_state.auth_session["role"] == "Recruiter":
                             })
                     else: raise Exception("API Error")
                 except:
-                    # Clear fallback escape execution to pull directly from local memory if connectivity drops
+                    # Clear fallback escape execution pulling directly from questions.py file
                     backup_pool = LOCAL_CS_BACKUP_DB[diff_tag]
-sampled = random.choices(backup_pool, k=target_count)
-for item in sampled:
-opts = list(item['choices'])
-random.shuffle(opts)
-compiled_questions.append({
-"id": len(compiled_questions) + 1, "difficulty": diff_tag,
-"question": item['question'], "choices": opts, "answer": item['answer']
-})
-st.session_state.active_exam_paper = compiled_questions
-st.success(f"🎯 Exam successfully generated for Tier {tier} College. {len(compiled_questions)} questions compiled.")
-if st.session_state.active_exam_paper:
-st.divider()
-st.subheader("📋 Active Live Assessment Blueprint Preview")
-st.dataframe(pd.DataFrame(st.session_state.active_exam_paper)[['id', 'difficulty', 'question', 'answer']], use_container_width=True)
+                    sampled = random.choices(backup_pool, k=target_count)
+                    for item in sampled:
+                        opts = list(item['choices'])
+                        random.shuffle(opts)
+                        compiled_questions.append({
+                            "id": len(compiled_questions) + 1, "difficulty": diff_tag,
+                            "question": item['question'], "choices": opts, "answer": item['answer']
+                        })
+            st.session_state.active_exam_paper = compiled_questions
+            st.success(f"🎯 Exam successfully generated for Tier {tier} College. {len(compiled_questions)} questions compiled.")
 
-─── MODULE B: CANDIDATE ASSESSMENT TERMINAL (Student Interface) ───
+    if st.session_state.active_exam_paper:
+        st.divider()
+        st.subheader("📋 Active Live Assessment Blueprint Preview")
+        st.dataframe(pd.DataFrame(st.session_state.active_exam_paper)[['id', 'difficulty', 'question', 'answer']], use_container_width=True)
 
+# ─── MODULE B: CANDIDATE ASSESSMENT TERMINAL (Student Interface) ───
 else:
-st.markdown("🎓 Secure Placement Assessment TerminalEnforced anti-cheating matrix. Answer keys are secured on the cloud server level.", unsafe_allow_html=True)
-if st.session_state.active_exam_paper is None:
+    st.markdown("<div class='student-header'><h1>🎓 Secure Placement Assessment Terminal</h1><p>Enforced anti-cheating matrix. Answer keys are secured on the cloud server level.</p></div>", unsafe_allow_html=True)
+    
+    if st.session_state.active_exam_paper is None:
 st.warning("💤 System Status: Waiting for the Recruiter Admin to authenticate and deploy the AI test template.")
 st.stop()
 st.sidebar.markdown(f"### 🕒 Exam Details")
@@ -200,7 +188,7 @@ st.markdown("#### Complete all required multiple-choice fields down below:")
 st.divider()
 for idx, item in enumerate(st.session_state.active_exam_paper):
 st.markdown(f"Question {idx+1}: [{item['difficulty'].upper()}] {item['question']}")
-student_responses[item["id"]] = st.radio(f"Select option for Q{idx+1}:", item["choices"], key=f"std_ans_{item['id']}", index=None)
+student_responses[item["id"]] = st.radio(f"Select option for Q{idx+1}:", item['choices'], key=f"std_ans_{item['id']}", index=None)
 st.write("")
 if st.form_submit_button("🏁 Conclude Examination & Submit Paper", use_container_width=True):
 score = 0
@@ -210,3 +198,21 @@ score += 1
 st.balloons()
 st.markdown("📊 Placement Sheet Ingested Successfully!Your results have been processed programmatically and synchronized to the recruiter database.", unsafe_allow_html=True)
 st.write(f"### Final Evaluation Score Matrix: {score} / {len(st.session_state.active_exam_paper)} Marks")
+
+---
+
+### Step 3: Verification Credentials Matrix
+Once your cloud server syncs both updated files, use these identical, hardcoded credential pairs to test the interfaces live for your presentation:
+
+*   **To Log In as the Corporate Recruiter (Admin Panel):**
+    *   **Authorization Role:** `🏢 Corporate Recruiter (Admin)`
+    *   **Username / Email ID:** `recruiter`
+    *   **Access Pin / Password:** `admin99`
+*   **To Log In as the Registered Candidate (Student Terminal):**
+    *   **Authorization Role:** `🎓 Registered Candidate (Student)`
+    *   **Username / Email ID:** `student`
+    *   **Access Pin / Password:** `123456`
+
+<FollowUp>
+Let me know if dividing the system into `app.py` and `questions.py` **successfully cleared the code cut-off errors** and loaded the full login screen! If everything looks great, we can move forward with adding **live candidate ranking databases** or compiling your official **README documentation sheet** for college submission.
+</FollowUp>
