@@ -206,18 +206,3 @@ else:
             st.balloons()
             st.markdown("<div style='background-color: #D1FAE5; padding: 20px; border-radius: 8px;'><h3>📊 Placement Sheet Ingested Successfully!</h3><p>Your results have been processed programmatically and synchronized to the recruiter database.</p></div>", unsafe_allow_html=True)
             st.write(f"### Final Evaluation Score Matrix: `{score} / {len(st.session_state.active_exam_paper)} Marks`")
-
----
-
-### Step 2: Ensure Your `requirements.txt` is Set Up Correctly
-To ensure that packages install automatically on Streamlit Cloud without syntax errors, your repository must contain a file named exactly **`requirements.txt`**.
-
-If you haven't created it yet:
-1. Click **Add file** ➔ **Create new file** in your GitHub repository.
-2. Name the file exactly **`requirements.txt`**.
-3. Paste these lines inside it and commit changes:
-   ```text
-   streamlit
-   pandas
-   requests
-   pytz
