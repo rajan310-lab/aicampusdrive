@@ -10,46 +10,27 @@ from datetime import datetime
 from questions import LOCAL_CS_BACKUP_DB
 
 # ==============================================================================
-# 1. ENTERPRISE THEMING, SECURITY VISIBILITY BLOCKS & TIMING CORE
+# 1. APPLICATION ENVIRONMENT THEMING & STATE INITIALIZATION
 # ==============================================================================
 st.set_page_config(page_title="AI Campus Drive Suite", layout="wide")
 ist = pytz.timezone('Asia/Kolkata')
 
-# Injecting custom CSS to completely hide Streamlit headers, footers, 
-# and repository edit flags, while styling visual element containers.
 st.markdown("""
     <style>
-        /* Completely strip out top decoration bars and manage app menus */
         #MainMenu {visibility: hidden;}
         header {visibility: hidden;}
         footer {visibility: hidden;}
         .viewerBadge_link__1S137 {display: none !important;}
         
-        /* Custom UI Card Containers */
-        .recruiter-header {
-            background-color: #1E3A8A;
-            padding: 20px;
-            border-radius: 10px;
-            color: white;
-            margin-bottom: 25px;
-        }
-        .student-header {
-            background-color: #047857;
-            padding: 20px;
-            border-radius: 10px;
-            color: white;
-            margin-bottom: 25px;
-        }
-        .metric-box {
-            background-color: #F3F4F6;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 5px solid #3B82F6;
-        }
+        .recruiter-header { background-color: #1E3A8A; padding: 20px; border-radius: 10px; color: white; margin-bottom: 25px; }
+        .student-header { background-color: #047857; padding: 20px; border-radius: 10px; color: white; margin-bottom: 25px; }
+        .social-btn { display: inline-block; width: 100%; text-align: center; padding: 10px; margin-bottom: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; text-decoration: none; }
+        .gmail-btn { background-color: #EA4335; color: white; }
+        .linkedin-btn { background-color: #0077B5; color: white; }
     </style>
 """, unsafe_allow_html=True)
 
-# Persistent State Initializations
+# State initialization loops
 if "auth_session" not in st.session_state:
     st.session_state.auth_session = {"logged_in": False, "username": None, "role": None}
 if "active_exam_paper" not in st.session_state:
@@ -57,29 +38,107 @@ if "active_exam_paper" not in st.session_state:
 if "exam_config" not in st.session_state:
     st.session_state.exam_config = {"college": "IIT Delhi", "dept": "Computer Science (CSE)", "total_q": 10, "timer_mins": 30}
 
+# Centralized IAM Database: Stores full profile matrices dynamically
+if "iam_user_db" not in st.session_state:
+    st.session_state.iam_user_db = {
+        "Recruiter": {"recruiter": {"pass": "admin99", "name": "System Admin"}},
+        "Student": {"student": {"pass": "123456", "name": "Default Student"}}
+    }
+
+# Generate a persistent CAPTCHA token if not present
+if "captcha_challenge" not in st.session_state:
+    st.session_state.captcha_challenge = "".join(random.choices("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", k=5))
+
 # ==============================================================================
-# 2. STATEFUL AUTHENTICATION SCREEN (Locks the system entirely)
+# 2. STATEFUL THEMED SECURITY SIGN-IN / SIGN-UP TERMINAL
 # ==============================================================================
 if not st.session_state.auth_session["logged_in"]:
-    st.markdown("<div style='text-align: center; margin-top: 50px;'><h1>🔐 AI Campus Drive Access Portal</h1><p>Please enter your credentials to clear security clearance verification.</p></div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; margin-top: 20px;'><h1>🔐 AI Campus Drive Access Terminal</h1><p>Enterprise IAM Authentication Framework</p></div>", unsafe_allow_html=True)
     st.divider()
     
     col1, col2, col3 = st.columns(3)
     with col2:
-        login_role = st.selectbox("Select Your Access Authorization Role:", ["Corporate Recruiter (Admin)", "Registered Candidate (Student)"])
-        input_user = st.text_input("Username / Email ID:")
-        input_pass = st.text_input("Access Pin / Password:", type="password")
+        auth_action = st.tabs(["📥 Sign In to Account", "📝 Register New Profile"])
         
-        if st.button("🚀 Authorize & Enter Gateway", use_container_width=True):
-            # Predefined credentials for presentation validation
-            if login_role == "Corporate Recruiter (Admin)" and input_user == "recruiter" and input_pass == "admin99":
-                st.session_state.auth_session = {"logged_in": True, "username": "HR Lead", "role": "Recruiter"}
-                st.rerun()
-            elif login_role == "Registered Candidate (Student)" and input_user == "student" and input_pass == "123456":
-                st.session_state.auth_session = {"logged_in": True, "username": "Candidate Account", "role": "Student"}
-                st.rerun()
-            else:
-                st.error("❌ Authentication Refusal: Access key mapping failed. Verify credentials.")
+        # SECTION A: SIGN IN INTERFACE
+        with auth_action[0]:
+            login_role = st.selectbox("Select Target Account Role:", ["Recruiter (Admin)", "Candidate (Student)"], key="login_role_sel")
+            role_key = "Recruiter" if "Recruiter" in login_role else "Student"
+            
+            in_user = st.text_input("Enter Registered Email ID:", key="login_uid").strip()
+            in_pass = st.text_input("Enter Account Password:", type="password", key="login_pwd").strip()
+            
+            if st.button("🚀 Authorize Session", use_container_width=True):
+                db = st.session_state.iam_user_db[role_key]
+                if in_user in db and db[in_user]["pass"] == in_pass:
+                    st.session_state.auth_session = {"logged_in": True, "username": db[in_user]["name"], "role": role_key}
+                    st.success("Session verified! Redirecting to secure profile dashboard...")
+                    st.rerun()
+                else:
+                    st.error("❌ Authentication Refusal: Access key credentials mapping failed.")
+                    
+        # SECTION B: COMPREHENSIVE SIGN UP INTERFACE
+        with auth_action[1]:
+            st.markdown("#### 🌐 Federated Third-Party Social Integration")
+            if st.button("🔴 Connect and Sign Up via Gmail Profile", use_container_width=True):
+                st.toast("🌐 Activating Google OAuth2 Secure Gateway Redirect...")
+                st.info("✨ [MOCK OAUTH2]: Successfully fetched token from Google identity servers. Mapped profile: rajan.310@gmail.com")
+                st.session_state.iam_user_db["Student"]["rajan.310@gmail.com"] = {"pass": "oauth_token", "name": "Rajan G"}
+                st.success("Registration Complete via Gmail! Switch to Sign In tab to access using email.")
+                
+            if st.button("🔵 Connect and Sign Up via LinkedIn Profile", use_container_width=True):
+                st.toast("🌐 Activating LinkedIn OpenID Connect API Stream...")
+                st.info("✨ [MOCK OAUTH2]: Successfully verified corporate profile metrics via LinkedIn API integration.")
+                st.session_state.iam_user_db["Recruiter"]["rajan.310@gmail.com"] = {"pass": "linkedin_token", "name": "Rajan Corporate"}
+                st.success("Registration Complete via LinkedIn! Switch to Sign In tab to access.")
+                
+            st.divider()
+            st.markdown("#### 📝 Manual Enterprise Registration Matrix")
+            
+            reg_role = st.selectbox("Registering Profile Role Type:", ["Recruiter (Admin)", "Candidate (Student)"], key="reg_role_sel")
+            reg_role_key = "Recruiter" if "Recruiter" in reg_role else "Student"
+            
+            reg_name = st.text_input("Full Legal Name:")
+            reg_contact = st.text_input("Contact Mobile Number (+91):")
+            reg_address = st.text_area("Permanent Residential / Corporate Address:")
+            reg_email = st.text_input("Primary Communication Email ID:").strip()
+            
+            reg_pass = st.text_input("Create Secret System Password:", type="password")
+            reg_confirm = st.text_input("Confirm Secret System Password:", type="password")
+            
+            st.markdown(f"<div style='background-color: #E5E7EB; padding: 10px; border-radius: 5px; text-align: center; font-family: monospace; font-size: 24px; letter-spacing: 8px;'><strong>{st.session_state.captcha_challenge}</strong></div>", unsafe_allow_html=True)
+            input_captcha = st.text_input("Type the alphanumeric security code displayed above:").strip()
+            
+            if st.button("📨 Verify Details & Request Sign-Up OTP", use_container_width=True):
+                if not (reg_name and reg_contact and reg_address and reg_email and reg_pass):
+                    st.error("⚠️ Validation Error: All tracking input fields must be fully populated.")
+                elif reg_pass != reg_confirm:
+                    st.error("⚠️ Security Discrepancy: Password entries do not match.")
+                elif input_captcha.upper() != st.session_state.captcha_challenge:
+                    st.error("⚠️ Security Refusal: CAPTCHA code verification failed.")
+                    st.session_state.captcha_challenge = "".join(random.choices("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", k=5))
+                    st.rerun()
+                else:
+                    st.session_state.pending_profile = {
+                        "role": reg_role_key, "email": reg_email, "pass": reg_pass, "name": reg_name
+                    }
+                    st.session_state.simulated_otp = "778899"
+                    st.toast("🎯 Cryptographic checks clear. Routing verification packets...")
+                    
+            if "pending_profile" in st.session_state:
+                st.divider()
+                st.markdown("#### 📱 Two-Factor Authentication Gateway (2FA)")
+                st.info(f"✨ [MOCK SMS/EMAIL RELAY]: Successfully routed secure 6-digit OTP verification pin 778899 to {reg_email}")
+                input_otp = st.text_input("Enter the 6-Digit Verification OTP Code:", type="password").strip()
+                
+                if st.button("🔒 Confirm OTP & Activate Profile", use_container_width=True):
+                    if input_otp == st.session_state.simulated_otp:
+                        p = st.session_state.pending_profile
+                        st.session_state.iam_user_db[p["role"]][p["email"]] = {"pass": p["pass"], "name": p["name"]}
+                        st.success(f"🎉 Roster Profile Activated Successfully for {p['email']}! Please navigate back to the 'Sign In to Account' tab above.")
+                        del st.session_state.pending_profile
+                    else:
+                        st.error("❌ Authentication Refusal: Submitted OTP code is invalid.")
     st.stop()
 
 # ==============================================================================
@@ -87,7 +146,6 @@ if not st.session_state.auth_session["logged_in"]:
 # ==============================================================================
 current_time = datetime.now(ist).strftime('%H:%M:%S')
 
-# Navigation and Session Bar in the Sidebar
 st.sidebar.markdown(f"### 🛡️ Secure System State")
 st.sidebar.markdown(f"👤 Account: **{st.session_state.auth_session['username']}**")
 st.sidebar.markdown(f"🕒 Exchange Time (IST): `{current_time}`")
@@ -113,18 +171,12 @@ if st.session_state.auth_session["role"] == "Recruiter":
         st.markdown("<div class='metric-box'><strong>Institutional Mapping Rules:</strong> Entering an elite campus (IIT, NIT, BITS) triggers the Tier 1 ratio matrix (30/40/30). Regional institutes set Tier 2 (35/45/20). Local setups trigger Tier 3 (40/50/10).</div>", unsafe_allow_html=True)
         
         if st.button("🤖 GENERATE TIER-BALANCED EXAM PAPER NOW", use_container_width=True):
-            # Save configurations directly to the global state panel
             st.session_state.exam_config = {"college": cfg_college, "dept": cfg_dept, "total_q": cfg_q_num, "timer_mins": cfg_timer}
-            
-            # Map the institutional tier string
             search_key = cfg_college.strip().lower()
             tier = 3
-            if "iit" in search_key or "nit" in search_key or "bits" in search_key:
-                tier = 1
-            elif "university" in search_key or "vit" in search_key or "srm" in search_key:
-                tier = 2
+            if "iit" in search_key or "nit" in search_key or "bits" in search_key: tier = 1
+            elif "university" in search_key or "vit" in search_key or "srm" in search_key: tier = 2
                 
-            # Assign your precise mathematical difficulty ratio limits
             if tier == 1: ratios = {"easy": 0.30, "medium": 0.40, "hard": 0.30}
             elif tier == 2: ratios = {"easy": 0.35, "medium": 0.45, "hard": 0.20}
             else: ratios = {"easy": 0.40, "medium": 0.50, "hard": 0.10}
@@ -133,9 +185,6 @@ if st.session_state.auth_session["role"] == "Recruiter":
             hard_target = max(1, round(cfg_q_num * ratios["hard"]))
             medium_target = cfg_q_num - (easy_target + hard_target)
             
-            st.toast(f"AI Matrix Set: Ingesting {easy_target} Easy, {medium_target} Medium, {hard_target} Hard items...")
-            
-            # Ingest questions using the internet API with automatic local fail-safe hooks
             compiled_questions = []
             difficulty_array = [("easy", easy_target), ("medium", medium_target), ("hard", hard_target)]
             
@@ -154,7 +203,6 @@ if st.session_state.auth_session["role"] == "Recruiter":
                             })
                     else: raise Exception("API Error")
                 except:
-                    # Clear fallback escape execution pulling directly from questions.py file
                     backup_pool = LOCAL_CS_BACKUP_DB[diff_tag]
                     sampled = random.choices(backup_pool, k=target_count)
                     for item in sampled:
@@ -179,9 +227,11 @@ else:
     if st.session_state.active_exam_paper is None:
         st.warning("💤 System Status: Waiting for the Recruiter Admin to authenticate and deploy the AI test template.")
         st.stop()
-        st.sidebar.markdown(f"### 🕒 Exam Details")
-        st.sidebar.markdown(f"🏫 Campus: {st.session_state.exam_config['college']}")
-        st.sidebar.error(f"⏳ Countdown: {st.session_state.exam_config['timer_mins']} Minutes Remaining")
+        
+    st.sidebar.markdown(f"### 🕒 Exam Details")
+    st.sidebar.markdown(f"🏫 Campus: **{st.session_state.exam_config['college']}**")
+    st.sidebar.error(f"⏳ Countdown: {st.session_state.exam_config['timer_mins']} Minutes Remaining")
+    
     student_responses = {}
     with st.form("student_exam_form"):
         st.markdown("#### Complete all required multiple-choice fields down below:")
@@ -189,19 +239,13 @@ else:
         
         for idx, item in enumerate(st.session_state.active_exam_paper):
             st.markdown(f"**Question {idx+1}: [{item['difficulty'].upper()}] {item['question']}**")
-            student_responses[item["id"]] = st.radio(
-                f"Select option for Q{idx+1}:", 
-                item['choices'], 
-                key=f"std_ans_{item['id']}", 
-                index=None
-            )
+            student_responses[item["id"]] = st.radio(f"Select option for Q{idx+1}:", item['choices'], key=f"std_ans_{item['id']}", index=None)
             st.write("")
             
         if st.form_submit_button("🏁 Conclude Examination & Submit Paper", use_container_width=True):
             score = 0
             for item in st.session_state.active_exam_paper:
-                if student_responses.get(item["id"]) == item["answer"]:
-                    score += 1
+                if student_responses.get(item["id"]) == item["answer"]: score += 1
                     
             st.balloons()
             st.markdown("<div style='background-color: #D1FAE5; padding: 20px; border-radius: 8px;'><h3>📊 Placement Sheet Ingested Successfully!</h3><p>Your results have been processed programmatically and synchronized to the recruiter database.</p></div>", unsafe_allow_html=True)
