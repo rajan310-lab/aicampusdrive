@@ -56,10 +56,11 @@ if not st.session_state.auth_session["logged_in"]:
     
     col1, col2, col3 = st.columns(3)
     with col2:
-        auth_action = st.tabs(["📥 Sign In to Account", "📝 Register New Profile"])
+        # FIX: Explicitly unpack the list of tabs into individual variables
+        sign_in_tab, register_tab = st.tabs(["📥 Sign In to Account", "📝 Register New Profile"])
         
         # SECTION A: SIGN IN INTERFACE
-        with auth_action:
+        with sign_in_tab:
             login_role = st.selectbox("Select Target Account Role:", ["Recruiter (Admin)", "Candidate (Student)"], key="login_role_sel")
             role_key = "Recruiter" if "Recruiter" in login_role else "Student"
             
@@ -76,10 +77,9 @@ if not st.session_state.auth_session["logged_in"]:
                     st.error("❌ Authentication Refusal: Access key credentials mapping failed.")
                     
         # SECTION B: COMPREHENSIVE SIGN UP INTERFACE
-        with auth_action:
+        with register_tab:
             st.markdown("#### 🌐 Federated Third-Party Social Integration")
             
-            # FIXED FLOW: Clicking this now automatically bypasses forms, registers you, and routes your login state
             if st.button("🔴 Connect and Sign Up via Gmail Profile", use_container_width=True):
                 st.toast("🌐 Activating Google OAuth2 Secure Gateway Redirect...")
                 st.session_state.iam_user_db["Student"]["rajan.310@gmail.com"] = {"pass": "admin", "name": "Rajan G"}
@@ -155,6 +155,7 @@ if st.sidebar.button("🚪 Terminate Session & Log Out", use_container_width=Tru
     st.session_state.auth_session = {"logged_in": False, "username": None, "role": None}
     st.session_state.active_exam_paper = None
     st.rerun()
+
 
 # MODULE A: RECRUITER AI GENERATION CORE (Admin Interface)
 if st.session_state.auth_session["role"] == "Recruiter":
