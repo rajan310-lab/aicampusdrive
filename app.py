@@ -184,18 +184,32 @@ else:
         st.sidebar.error(f"⏳ Countdown: {st.session_state.exam_config['timer_mins']} Minutes Remaining")
 
 student_responses = {}
-with st.form("student_exam_form"):
+    with st.form("student_exam_form"):
         st.markdown("#### Complete all required multiple-choice fields down below:")
         st.divider()
-for idx, item in enumerate(st.session_state.active_exam_paper):
-st.markdown(f"Question {idx+1}: [{item['difficulty'].upper()}] {item['question']}")
-student_responses[item["id"]] = st.radio(f"Select option for Q{idx+1}:", item['choices'], key=f"std_ans_{item['id']}", index=None)
-st.write("")
-if st.form_submit_button("🏁 Conclude Examination & Submit Paper", use_container_width=True):
-score = 0
-for item in st.session_state.active_exam_paper:
-if student_responses.get(item["id"]) == item["answer"]:
-score += 1
-st.balloons()
-st.markdown("📊 Placement Sheet Ingested Successfully!Your results have been processed programmatically and synchronized to the recruiter database.", unsafe_allow_html=True)
-st.write(f"### Final Evaluation Score Matrix: {score} / {len(st.session_state.active_exam_paper)} Marks")
+    for idx, item in enumerate(st.session_state.active_exam_paper):
+        st.markdown(f"Question {idx+1}: [{item['difficulty'].upper()}] {item['question']}")
+        student_responses[item["id"]] = st.radio(f"Select option for Q{idx+1}:", item['choices'], key=f"std_ans_{item['id']}", index=None)
+        st.write("")
+    if st.form_submit_button("🏁 Conclude Examination & Submit Paper", use_container_width=True):
+        score = 0
+    for item in st.session_state.active_exam_paper:
+    if student_responses.get(item["id"]) == item["answer"]:
+        score += 1
+        st.balloons()
+        st.markdown("📊 Placement Sheet Ingested Successfully!Your results have been processed programmatically and synchronized to the recruiter database.", unsafe_allow_html=True)
+    st.write(f"### Final Evaluation Score Matrix: {score} / {len(st.session_state.active_exam_paper)} Marks")
+---
+
+### Step 2: Ensure Your `requirements.txt` is Set Up Correctly
+To ensure that packages install automatically on Streamlit Cloud without syntax errors, your repository must contain a file named exactly **`requirements.txt`**.
+
+If you haven't created it yet:
+1. Click **Add file** ➔ **Create new file** in your GitHub repository.
+2. Name the file exactly **`requirements.txt`**.
+3. Paste these lines inside it and commit changes:
+   ```text
+   streamlit
+   pandas
+   requests
+   pytz
