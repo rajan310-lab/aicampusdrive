@@ -6,9 +6,6 @@ import random
 import pytz
 from datetime import datetime
 
-# Import our custom database from our separate file
-from questions import LOCAL_CS_BACKUP_DB
-
 # ==============================================================================
 # 1. APPLICATION ENVIRONMENT THEMING & STATE INITIALIZATION
 # ==============================================================================
@@ -28,7 +25,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# State initialization loops
+# Persistent State Initializations
 if "auth_session" not in st.session_state:
     st.session_state.auth_session = {"logged_in": False, "username": None, "role": None}
 if "active_exam_paper" not in st.session_state:
@@ -47,6 +44,22 @@ if "iam_user_db" not in st.session_state:
 if "captcha_challenge" not in st.session_state:
     st.session_state.captcha_challenge = "".join(random.choices("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", k=5))
 
+# Integrated Self-Contained Fail-safe Question Bank
+LOCAL_CS_BACKUP_DB = {
+    "easy": [
+        {"question": "What is the primary function of an Operating System Kernel?", "choices": ["Memory/Resource Management", "Web Browsing", "Compiling Code", "Hardware Manufacturing"], "answer": "Memory/Resource Management"},
+        {"question": "Which programming language uses automated Garbage Collection?", "choices": ["Java", "C++", "C", "Assembly"], "answer": "Java"}
+    ],
+    "medium": [
+        {"question": "What is the average time complexity of a QuickSort algorithm loop?", "choices": ["O(n log n)", "O(n^2)", "O(log n)", "O(n)"], "answer": "O(n log n)"},
+        {"question": "Which data structure is best optimized for implementing a BFS graph traversal?", "choices": ["Queue", "Stack", "Binary Tree", "Priority Heap"], "answer": "Queue"}
+    ],
+    "hard": [
+        {"question": "Which concurrency deadlock condition is violated by implementing a strict resource hierarchy ordering?", "choices": ["Circular Wait", "Mutual Exclusion", "Hold and Wait", "No Preemption"], "answer": "Circular Wait"},
+        {"question": "What scheduling anomaly occurs when adding more page frames increases page faults in a FIFO memory setup?", "choices": ["Belady's Anomaly", "Priority Inversion", "Thrashing Equilibrium", "Convoy Effect Matrix"], "answer": "Belady's Anomaly"}
+    ]
+}
+
 # ==============================================================================
 # 2. STATEFUL THEMED SECURITY SIGN-IN / SIGN-UP TERMINAL
 # ==============================================================================
@@ -56,7 +69,6 @@ if not st.session_state.auth_session["logged_in"]:
     
     col1, col2, col3 = st.columns(3)
     with col2:
-        # FIX: Explicitly unpack the list of tabs into individual variables
         sign_in_tab, register_tab = st.tabs(["📥 Sign In to Account", "📝 Register New Profile"])
         
         # SECTION A: SIGN IN INTERFACE
@@ -139,11 +151,10 @@ if not st.session_state.auth_session["logged_in"]:
                         st.session_state.iam_user_db[p["role"]][p["email"]] = {"pass": p["pass"], "name": p["name"]}
                         st.success(f"🎉 Roster Profile Activated Successfully for {p['email']}! Please navigate back to the 'Sign In to Account' tab above.")
                         del st.session_state.pending_profile
-                    else:
-                        st.error("❌ Authentication Refusal: Submitted OTP code is invalid.")
-    st.stop()
-
-# ==============================================================================
+                else:
+                    st.error("❌ Authentication Refusal: Submitted OTP code is invalid.")
+                    st.stop()
+    # ==============================================================================
 # 3. RENDER CORE USER CONSOLE WORKFLOWS
 # ==============================================================================
 current_time = datetime.now(ist).strftime('%H:%M:%S')
@@ -156,14 +167,8 @@ if st.sidebar.button("🚪 Terminate Session & Log Out", use_container_width=Tru
     st.session_state.active_exam_paper = None
     st.rerun()
 
-
 # MODULE A: RECRUITER AI GENERATION CORE (Admin Interface)
 if st.session_state.auth_session["role"] == "Recruiter":
-    st.markdown("<div class='recruiter-header'><h1>🏢 Recruiter Command Suite & Parameter Engine</h1><p>Set operational boundaries, college tier vectors, and generate cognitive balance matrix papers.</p></div>", unsafe_allow_html=True)
-    
-    panel_col1, panel_col2 = st.columns(2)
-    with panel_col1:
-        st.markdown("### 🎛️ Exam Parameter Controls")
     st.markdown("<div class='recruiter-header'><h1>🏢 Recruiter Command Suite & Parameter Engine</h1><p>Set operational boundaries, college tier vectors, and generate cognitive balance matrix papers.</p></div>", unsafe_allow_html=True)
     
     panel_col1, panel_col2 = st.columns(2)
