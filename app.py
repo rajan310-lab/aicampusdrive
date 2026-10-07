@@ -151,13 +151,13 @@ if not st.session_state.auth_session["logged_in"]:
                         st.session_state.iam_user_db[p["role"]][p["email"]] = {"pass": p["pass"], "name": p["name"]}
                         st.success(f"🎉 Roster Profile Activated Successfully for {p['email']}! Please navigate back to the 'Sign In to Account' tab above.")
                         del st.session_state.pending_profile
----
-
+                else:
+                    st.error("❌ Authentication Refusal: Submitted OTP code is invalid.")
+                    st.stop()
 ### Part 2 of 2: The Core Recruiter & Candidate Examination Console
 
 #### Copy this code block, paste it at the bottom of the exact same `app.py` file on GitHub (directly under Part 1), and save the file:
 
-```python
 # ==============================================================================
 # SECTION 3: RENDER CORE USER CONSOLE WORKFLOWS
 # ==============================================================================
