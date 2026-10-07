@@ -182,23 +182,31 @@ else:
         st.sidebar.markdown(f"### 🕒 Exam Details")
         st.sidebar.markdown(f"🏫 Campus: {st.session_state.exam_config['college']}")
         st.sidebar.error(f"⏳ Countdown: {st.session_state.exam_config['timer_mins']} Minutes Remaining")
-
-student_responses = {}
+    student_responses = {}
     with st.form("student_exam_form"):
         st.markdown("#### Complete all required multiple-choice fields down below:")
         st.divider()
-    for idx, item in enumerate(st.session_state.active_exam_paper):
-        st.markdown(f"Question {idx+1}: [{item['difficulty'].upper()}] {item['question']}")
-        student_responses[item["id"]] = st.radio(f"Select option for Q{idx+1}:", item['choices'], key=f"std_ans_{item['id']}", index=None)
-        st.write("")
-    if st.form_submit_button("🏁 Conclude Examination & Submit Paper", use_container_width=True):
-        score = 0
-    for item in st.session_state.active_exam_paper:
-    if student_responses.get(item["id"]) == item["answer"]:
-        score += 1
-        st.balloons()
-        st.markdown("📊 Placement Sheet Ingested Successfully!Your results have been processed programmatically and synchronized to the recruiter database.", unsafe_allow_html=True)
-    st.write(f"### Final Evaluation Score Matrix: {score} / {len(st.session_state.active_exam_paper)} Marks")
+        
+        for idx, item in enumerate(st.session_state.active_exam_paper):
+            st.markdown(f"**Question {idx+1}: [{item['difficulty'].upper()}] {item['question']}**")
+            student_responses[item["id"]] = st.radio(
+                f"Select option for Q{idx+1}:", 
+                item['choices'], 
+                key=f"std_ans_{item['id']}", 
+                index=None
+            )
+            st.write("")
+            
+        if st.form_submit_button("🏁 Conclude Examination & Submit Paper", use_container_width=True):
+            score = 0
+            for item in st.session_state.active_exam_paper:
+                if student_responses.get(item["id"]) == item["answer"]:
+                    score += 1
+                    
+            st.balloons()
+            st.markdown("<div style='background-color: #D1FAE5; padding: 20px; border-radius: 8px;'><h3>📊 Placement Sheet Ingested Successfully!</h3><p>Your results have been processed programmatically and synchronized to the recruiter database.</p></div>", unsafe_allow_html=True)
+            st.write(f"### Final Evaluation Score Matrix: `{score} / {len(st.session_state.active_exam_paper)} Marks`")
+
 ---
 
 ### Step 2: Ensure Your `requirements.txt` is Set Up Correctly
