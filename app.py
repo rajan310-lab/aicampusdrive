@@ -109,27 +109,28 @@ LOCAL_CS_BACKUP_DB = {
 @st.cache_data(ttl=3600)
 def fetch_global_indian_colleges_database():
     target_registry_url = "https://githubusercontent.com"
-                try:
-                    res = requests.get(target_url, timeout=5).json()
-                    all_questions_pool = res.get("questions", [])
-                    
-                    for diff_tag, target_count in difficulty_array:
-                        filtered_pool = [q for q in all_questions_pool if q.get("difficulty", "").lower() == diff_tag]
-                        if len(filtered_pool) >= target_count: 
-                            sampled_pool = random.sample(filtered_pool, target_count)
-                        else: 
-                            sampled_pool = filtered_pool
-                            
-                        for row in sampled_pool:
-                            compiled_questions.append({
-                                "id": len(compiled_questions) + 1, 
-                                "difficulty": diff_tag, 
-                                "question": row["title"], 
-                                "choices": row["choices"], 
-                                "answer": row["correct_answer"]
-                            })
-                except:
-
+    try:
+        response = requests.get(target_registry_url, timeout=5).json()
+        college_names = []
+        if isinstance(response, list):
+            for item in response:
+                name = item.get("name") if isinstance(item, dict) else str(item)
+                if name: college_names.append(name.strip())
+        elif isinstance(response, dict):
+            raw_list = response.get("colleges", response.get("data", response.get("list", [])))
+            for item in raw_list:
+                name = item.get("name") if isinstance(item, dict) else str(item)
+                if name: college_names.append(name.strip())
+                
+        final_list = sorted(list(set(college_names)))
+        if "IIT Delhi" not in final_list:
+            final_list.insert(0, "IIT Delhi")
+            
+        if len(final_list) > 10:
+            return final_list
+        else:
+            raise Exception("Format Error")
+    except:
         return [
             "IIT Delhi", "IIT Bombay", "IIT Madras", "IIT Kharagpur", "IIT Roorkee", "IIT Kanpur", "IIT Guwahati", 
             "NIT Trichy", "NIT Surathkal", "NIT Warangal", "BITS Pilani", "VIT Vellore", "SRM University", 
@@ -137,6 +138,7 @@ def fetch_global_indian_colleges_database():
         ]
 
 INDIAN_CAMPUS_ROSTER_POOL = fetch_global_indian_colleges_database()
+
 
 # ==============================================================================
 # SECTION 2: STATEFUL THEMED SECURITY SIGN-IN / SIGN-UP TERMINAL
