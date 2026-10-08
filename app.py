@@ -234,10 +234,15 @@ if active_user_role == "Recruiter":
         
         panel_col1, panel_col2 = st.columns(2)
         with panel_col1:
-               st.markdown("### 🎛️ Exam Parameter Controls")
-        cfg_college = st.text_input("Enter Target College Name:", value=st.session_state.exam_config["college"])
+                      st.markdown("### 🎛️ Exam Parameter Controls")
         
-        # Correctly indented Designation Dropdown Block
+        # UPGRADED: Connects your input directly to our 5,000+ internet campus database
+        cfg_college = st.selectbox(
+            "Select or Type Target Placement College Name:", 
+            options=INDIAN_CAMPUS_ROSTER_POOL,
+            index=INDIAN_CAMPUS_ROSTER_POOL.index("IIT Delhi") if "IIT Delhi" in INDIAN_CAMPUS_ROSTER_POOL else 0
+        )
+        
         cfg_dept = st.selectbox(
             "Select Target Candidate Designation Profile:", 
             ["Software Developer Profile", "QA Automation Tester Profile", "Cloud Solutions Architect Profile"]
@@ -245,6 +250,7 @@ if active_user_role == "Recruiter":
         
         cfg_q_num = st.number_input("Fix Total Number of Questions:", min_value=10, max_value=30, value=st.session_state.exam_config["total_q"], step=5)
         cfg_timer = st.slider("Fix Test Duration Countdown Timer (Minutes):", 5, 120, st.session_state.exam_config["timer_mins"])
+
             
         with panel_col2:
             st.markdown("### 🧠 AI Cognitive Tier Diagnostic")
