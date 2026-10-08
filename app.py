@@ -150,6 +150,7 @@ if not st.session_state.auth_session["logged_in"]:
     with col2:
         sign_in_tab, register_tab = st.tabs(["📥 Sign In to Account", "📝 Register New Profile"])
         
+                # SUB-SECTION: SIGN IN INTERFACE
         with sign_in_tab:
             login_role = st.selectbox("Select Target Account Role:", ["Recruiter (Admin)", "Candidate (Student)"], key="login_role_sel")
             role_key = "Recruiter" if "Recruiter" in login_role else "Student"
@@ -166,6 +167,7 @@ if not st.session_state.auth_session["logged_in"]:
                 else:
                     st.error("❌ Authentication Refusal: Access key credentials mapping failed.")
                     
+        # SUB-SECTION: COMPREHENSIVE SIGN UP INTERFACE
         with register_tab:
         # SECTION B: COMPREHENSIVE SIGN UP INTERFACE (CONCLUDED)
         with register_tab:
