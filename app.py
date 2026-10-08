@@ -77,7 +77,11 @@ def fetch_global_indian_colleges_database():
         if "IIT Delhi" not in final_list:
             final_list.insert(0, "IIT Delhi")
             
-        return final_list if len(final_list) > 10 else raise_exception
+        # FIX: Repaired the exception syntax tracking mechanism cleanly
+        if len(final_list) > 10:
+            return final_list
+        else:
+            raise Exception("Format Error")
     except:
         # Complete fallback list containing top engineering institutions across zones if network times out
         return [
@@ -88,6 +92,7 @@ def fetch_global_indian_colleges_database():
 
 # Instantiate the live autocomplete database array
 INDIAN_CAMPUS_ROSTER_POOL = fetch_global_indian_colleges_database()
+
 
 # Centralized IAM Database: Stores full profile matrices dynamically
 if "iam_user_db" not in st.session_state:
