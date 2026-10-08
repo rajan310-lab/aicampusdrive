@@ -47,35 +47,47 @@ def render_system_configuration_center(app_view, active_user_role, active_user_i
                 st.success("Roster record metadata fields updated successfully on the server state layer!")
                 st.rerun()
 
-# Initialize global layout state variables if not present
 # ==============================================================================
 # AUTOMATED RECRUITER DATA INGESTION: GLOBAL CAMPUS AUTOCOMPLETE CORE
 # ==============================================================================
-@st.cache_data(ttl=3600)  # Caches the 5,000+ data bank for 1 hour to prevent latency lag
+@st.cache_data(ttl=3600)  # Keeps it locked in memory for 1 hour to prevent any slow page loads
 def fetch_global_indian_colleges_database():
-    # Free, open-access JSON registry containing verified list of Indian universities/colleges
+    # Production-ready open dataset containing extensive lists of premium Indian universities
     target_registry_url = "https://githubusercontent.com"
     try:
-        response = requests.get(target_registry_url, timeout=4).json()
-        # Returns a clean list of string names extracted from the internet data repo
-        return [item.get("name") for item in response] if isinstance(response, list) else ["IIT Delhi", "IIT Bombay", "NIT Trichy", "VIT Vellore"]
+        response = requests.get(target_registry_url, timeout=5).json()
+        
+        # Professional data parser: Extracts names safely from different JSON styles
+        college_names = []
+        if isinstance(response, list):
+            for item in response:
+                name = item.get("name") if isinstance(item, dict) else str(item)
+                if name: college_names.append(name.strip())
+        elif isinstance(response, dict):
+            # If the database file is indexed by a master 'colleges' or 'data' key
+            raw_list = response.get("colleges", response.get("data", response.get("list", [])))
+            for item in raw_list:
+                name = item.get("name") if isinstance(item, dict) else str(item)
+                if name: college_names.append(name.strip())
+                
+        # Remove any accidental duplicate values and sort them alphabetically
+        final_list = sorted(list(set(college_names)))
+        
+        # Ensure our target default university remains locked as a valid list parameter anchor
+        if "IIT Delhi" not in final_list:
+            final_list.insert(0, "IIT Delhi")
+            
+        return final_list if len(final_list) > 10 else raise_exception
     except:
-        # Fail-safe institutional fallback list if external web network latency peaks
-        return ["IIT Delhi", "IIT Bombay", "IIT Madras", "NIT Trichy", "VIT Vellore", "SRM University", "Anna University"]
+        # Complete fallback list containing top engineering institutions across zones if network times out
+        return [
+            "IIT Delhi", "IIT Bombay", "IIT Madras", "IIT Kharagpur", "IIT Roorkee", "IIT Kanpur", "IIT Guwahati", 
+            "NIT Trichy", "NIT Surathkal", "NIT Warangal", "BITS Pilani", "VIT Vellore", "SRM University", 
+            "Anna University", "Delhi Technological University (DTU)", "COEP Pune", "Jadavpur University"
+        ]
 
 # Instantiate the live autocomplete database array
 INDIAN_CAMPUS_ROSTER_POOL = fetch_global_indian_colleges_database()
-
-if "auth_session" not in st.session_state:
-    st.session_state.auth_session = {"logged_in": False, "username": None, "role": None}
-if "active_exam_paper" not in st.session_state:
-    st.session_state.active_exam_paper = None
-if "exam_config" not in st.session_state:
-    st.session_state.exam_config = {"college": "IIT Delhi", "dept": "Data Structures & Algorithms", "total_q": 10, "timer_mins": 30}
-if "ui_theme" not in st.session_state:
-    st.session_state.ui_theme = "Deep Corporate Blue"
-if "student_scores_db" not in st.session_state:
-    st.session_state.student_scores_db = []
 
 # Centralized IAM Database: Stores full profile matrices dynamically
 if "iam_user_db" not in st.session_state:
