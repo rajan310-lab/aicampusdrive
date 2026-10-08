@@ -166,9 +166,7 @@ if not st.session_state.auth_session["logged_in"]:
                     st.rerun()
                 else:
                     st.error("❌ Authentication Refusal: Access key credentials mapping failed.")
-                    
-        # SUB-SECTION: COMPREHENSIVE SIGN UP INTERFACE
-        with register_tab:
+     
         # SECTION B: COMPREHENSIVE SIGN UP INTERFACE (CONCLUDED)
         with register_tab:
             st.markdown("#### 🌐 Federated Third-Party Social Integration")
